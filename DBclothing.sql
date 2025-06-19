@@ -16,10 +16,11 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `DBclothing` DEFAULT CHARACTER SET utf8 ;
 USE `DBclothing` ;
+-- ------------------------------------------------------
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Branch`
--- -----------------------------------------------------
+--
+-- Table structure for table `DBclothing`.`Branch`
+-- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Branch` (
   `branch_code` VARCHAR(11) NOT NULL,
   `branch_name` VARCHAR(45) NOT NULL,
@@ -28,10 +29,22 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Branch` (
   PRIMARY KEY (`branch_code`))
 ENGINE = InnoDB;
 
+-- 
+-- Dumping data for table `Branch`
+-- 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Product`
--- -----------------------------------------------------
+
+INSERT INTO `Branch` VALUES 
+('B001', 'Manila Branch', '123 Main St, Cityville', '09171234567'),
+('B002', 'Davao Branch', '456 North St, Cityville', '09179876543'),
+('B003', 'Cebu Branch', 'Level 2, Midtown Mall', '09177654321');
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`Product`
+-- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Product` (
   `product_id` INT NOT NULL,
   `product_name` VARCHAR(45) NOT NULL,
@@ -40,47 +53,147 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Product` (
   `category` VARCHAR(45) NOT NULL,
   `quantity_in_stock` INT NOT NULL,
   `unit_price` DECIMAL(10,2) NOT NULL,
-  `discontinued` BOOLEAN NOT NULL,
+  `discontinued` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`product_id`))
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
+-- 
+-- Dumping data for table `products`
+-- 
+INSERT INTO `Product` VALUES
+(1001, 'MENS T-SHIRT', 'L', 'Black', 'Men', 100, 400.00, 'FALSE'),
+(1002, 'MENS LEVIS', '32', 'Black', 'Men', 80, 700.00, 'FALSE'),
+(1003, 'PALM TREE EMBROIDERY HOODIE', 'M', 'Pink', 'Women', 60, 2200.00, 'FALSE'),
+(1004, 'LINEN BRAND SHORTS', 'S', 'Orange', 'Women', 70, 1200.00, 'FALSE'),
+(1005, 'SCOTCH & SODA CONTRAST PANEL SHORTS', 'M', 'Pink', 'Women', 65, 2200.00, 'FALSE'),
+(1006, 'HALF FANCY SUMMER DRESS', 'M', 'Yellow', 'Women', 50, 1300.00, 'FALSE'),
+(1007, 'FLIX FLOX JEANS', '28', 'Blue', 'Women', 90, 1300.00, 'FALSE'),
+(1008, 'FANCY SWEATER', 'L', 'Yellow', 'Women', 85, 1500.00, 'FALSE'),
+(1009, 'VARSITY RIBBED MAXI DRESS WITH BELT', 'M', 'Blue', 'Women', 40, 4000.00, 'FALSE'),
+(1010, 'WOMENS JOSS PANTS', 'M', 'Blue', 'Women', 55, 3000.00, 'FALSE'),
+(1011, 'CONTRAST COLLAR COTTON JACKET', 'XL', 'Black', 'Winter', 30, 20000.00, 'FALSE'),
+(1012, 'DENIM VARSITY JACKET', 'L', 'Blue', 'Winter', 25, 15000.00, 'FALSE'),
+(1013, 'QUILTED GILET WITH CONTRAST DETAILS', 'L', 'Brown', 'Winter', 20, 12000.00, 'FALSE'),
+(1014, 'FAUX SUEDE JACKET WITH SHERPA COLLAR', 'M', 'Black', 'Winter', 20, 12000.00, 'FALSE'),
+(1015, 'FAUX SUEDE VARSITY BOMBER JACKET', 'M', 'Blue', 'Winter', 20, 18000.00, 'FALSE'),
+(1016, 'FAUX LEATHER OVERSIZED JACKET', 'L', 'Black', 'Winter', 20, 19000.00, 'FALSE'),
+(1017, 'FAUX SUEDE JACKET WITH ZIP', 'M', 'Green', 'Winter', 20, 17000.00, 'FALSE'),
+(1018, 'FAUX SUEDE VARSITY JACKET', 'L', 'Black', 'Winter', 20, 23000.00, 'FALSE'),
+(1019, 'FAUX SUEDE BIKER JACKET', 'L', 'Blue', 'Winter', 20, 21000.00, 'FALSE'),
+(1020, 'HAVANNA TROPIC PRINT SHIRT', 'L', 'Orange', 'Men', 70, 2200.00, 'FALSE'),
+(1021, 'COTTON-LINEN SHIRT', 'L', 'White', 'Men', 70, 1200.00, 'FALSE'),
+(1022, 'GRADIENT SLOGAN GRAPHIC T-SHIRT', 'M', 'White', 'Men', 80, 1600.00, 'FALSE'),
+(1023, 'STRIPED COTTON SHIRT', 'L', 'Blue', 'Men', 60, 1500.00, 'FALSE'),
+(1024, 'SLIM FIT TROUSERS', '32', 'Green', 'Men', 60, 2000.00, 'FALSE'),
+(1025, 'COLOR-BLOCK SHORTS WITH PRINT', 'M', 'Blue', 'Men', 60, 1800.00, 'FALSE'),
+(1026, 'COTTON CHINOS', '34', 'Black', 'Men', 70, 2500.00, 'FALSE'),
+(1027, 'TENNIS GRAPHIC HOODIE', 'M', 'Black', 'Kids', 40, 4000.00, 'FALSE'),
+(1028, 'SKATER FIT JEANS', '28', 'Green', 'Kids', 50, 3500.00, 'FALSE'),
+(1029, 'SMILE HOODED ZIPPER SWEATSHIRT', 'M', 'Purple', 'Kids', 45, 4500.00, 'FALSE'),
+(1030, 'SWEATSHIRT WITH CHECKERED PRINT DETAIL', 'L', 'Brown', 'Kids', 50, 4500.00, 'FALSE'),
+(1031, 'CHARACTER PRINTED HOODIE', 'S', 'Gray', 'Kids', 55, 3500.00, 'FALSE'),
+(1032, 'CHECKERED SHIRT WITH PATCH POCKET', 'M', 'Black', 'Kids', 50, 3000.00, 'FALSE'),
+(1033, 'PLAIN SWEATSHIRT WITH ZIPPER OPENING', 'M', 'Red', 'Kids', 60, 5000.00, 'FALSE'),
+(1034, 'STRAIGHT FIT JEANS', '30', 'Blue', 'Kids', 60, 4000.00, 'FALSE'),
+(1035, 'MOON NECK SWEATER', 'M', 'Orange', 'Winter', 25, 5000.00, 'FALSE'),
+(1036, 'EMPATHY SWEATSHIRT', 'M', 'Purple', 'Winter', 30, 2000.00, 'FALSE'),
+(1037, 'AARUSHI GREEN MUSLIN KURTA SET', 'M', 'Green', 'Women', 35, 2900.00, 'FALSE'),
+(1038, 'SRILEKHA SLUB STRAIGHT KURTA PALAZZO SET', 'M', 'Pink', 'Women', 40, 2200.00, 'FALSE'),
+(1039, 'CLASSIC TEE', 'M', 'Black', 'T-Shirt', 100, 399.99, 'FALSE'),
+(1040, 'DENIM JACKET', 'L', 'Blue', 'Outerwear', 50, 1499.50, 'FALSE'),
+(1041, 'SLIM FIT JEANS', '32', 'Dark Blue', 'Pants', 75, 999.00, 'FALSE'),
+(1042, 'HOODED SWEATSHIRT', 'L', 'Gray', 'Sweater', 60, 899.99, 'FALSE'),
+(1043, 'FORMAL SHIRT', 'M', 'White', 'Formalwear', 80, 799.00, 'FALSE');
+
+
+-- ------------------------------------------------------
+
+
+-- 
 -- Table `DBclothing`.`Customer`
--- -----------------------------------------------------
+-- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Customer` (
   `customer_id` INT NOT NULL,
   `first_name` VARCHAR(45) NOT NULL,
   `last_name` VARCHAR(45) NOT NULL,
   `email` VARCHAR(45) NOT NULL,
-  `isMember` BOOLEAN NOT NULL,
+  `isMember` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`customer_id`))
 ENGINE = InnoDB;
 
+-- 
+-- Dumping data for table `Customer`
+-- 
+INSERT INTO `Customer` VALUES
+(1001, 'Anna', 'Reyes', 'anna.reyes@email.com', 'TRUE'),
+(1002, 'Marco', 'Tan', 'marco.tan@email.com', 'TRUE'),
+(1003, 'Carla', 'Lopez', 'carla.lopez@email.com', 'FALSE'),
+(1004, 'Rico', 'Torres', 'rico.torres@email.com', 'TRUE');
+-- ------------------------------------------------------
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Sales Rep`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales Rep` (
+
+--
+-- Table structure for table `DBclothing`.`Member`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`Member` (
+  `member_id` INT NOT NULL,
+  `customer_id` INT NOT NULL,
+  `gender` VARCHAR(10) NOT NULL,
+  `date_registered` DATE NOT NULL,
+  PRIMARY KEY (`member_id`),
+  UNIQUE INDEX `customer_id_UNIQUE` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `fk_Member_Customer1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `DBclothing`.`Customer` (`customer_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+--
+-- Dumping data for table `Member`
+--
+INSERT INTO `Member` VALUES
+(2001, 1001, 'Female', '2024-06-01'),
+(2002, 1002, 'Male', '2024-06-03'),
+(2004, 1004, 'Male', '2024-06-07');
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`SalesRep`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`SalesRep` (
   `sales_rep_id` INT NOT NULL,
   `name` VARCHAR(45) NOT NULL,
   `branch_code` VARCHAR(11) NOT NULL,
   `email` VARCHAR(45) NOT NULL,
   `hire_date` DATE NOT NULL,
-  `active_status` VARCHAR(20) NOT NULL,
+  `active_status` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`sales_rep_id`),
-  INDEX `fk_Sales Rep_Branch1_idx` (`branch_code` ASC) VISIBLE,
-  CONSTRAINT `fk_Sales Rep_Branch1`
+  INDEX `fk_SalesRep_Branch1_idx` (`branch_code` ASC) VISIBLE,
+  CONSTRAINT `fk_SalesRep_Branch1`
     FOREIGN KEY (`branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+--
+-- Dumping data for table `SalesRep`
+--
+INSERT INTO `SalesRep` VALUES 
+(201, 'Luis Dela Cruz', 'B001', 'luis.dc@store.com', '2023-03-01', 'TRUE'),
+(202, 'Jenny Navarro', 'B002', 'jenny.nav@store.com', '2022-11-15', 'TRUE'),
+(203, 'Alyssa Gatchalian', 'B003', 'alyssa.gat@store.com', '2024-01-10', 'TRUE');
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Sales`
--- -----------------------------------------------------
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`Sales`
+-- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales` (
   `sales_id` INT NOT NULL,
   `customer_id` INT NOT NULL,
@@ -88,19 +201,19 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales` (
   `branch_code` VARCHAR(11) NOT NULL,
   `sale_date` DATE NOT NULL,
   `payment_type` VARCHAR(45) NOT NULL,
-  `total_amout` DECIMAL(10,2) NOT NULL,
+  `total_amount` DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (`sales_id`),
   INDEX `fk_Sales_Member1_idx` (`customer_id` ASC) VISIBLE,
-  INDEX `fk_Sales_Sales Rep1_idx` (`sales_rep_id` ASC) VISIBLE,
+  INDEX `fk_Sales_SalesRep1_idx` (`sales_rep_id` ASC) VISIBLE,
   INDEX `fk_Sales_Branch1_idx` (`branch_code` ASC) VISIBLE,
   CONSTRAINT `fk_Sales_Member1`
     FOREIGN KEY (`customer_id`)
     REFERENCES `DBclothing`.`Customer` (`customer_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Sales_Sales Rep1`
+  CONSTRAINT `fk_Sales_SalesRep1`
     FOREIGN KEY (`sales_rep_id`)
-    REFERENCES `DBclothing`.`Sales Rep` (`sales_rep_id`)
+    REFERENCES `DBclothing`.`SalesRep` (`sales_rep_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Sales_Branch1`
@@ -111,10 +224,21 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Sales Items`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales Items` (
+--
+-- Dumping data for table `Sales`
+--
+INSERT INTO `Sales` VALUES
+(5001, 1001, 201, 'B001', '2025-06-10', 'Credit Card', 1500.00),
+(5002, 1002, 202, 'B002', '2025-06-11', 'Cash', 700.00),
+(5003, 1003, 201, 'B001', '2025-06-12', 'Cash', 400.00);
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`SalesItems`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`SalesItems` (
   `sale_item_id` INT NOT NULL,
   `sale_id` INT NOT NULL,
   `product_id` INT NOT NULL,
@@ -123,12 +247,12 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales Items` (
   PRIMARY KEY (`sale_item_id`),
   INDEX `fk_Sales Items_Sales1_idx` (`sale_id` ASC) VISIBLE,
   INDEX `fk_Sales Items_Product1_idx` (`product_id` ASC) VISIBLE,
-  CONSTRAINT `fk_Sales Items_Sales1`
+  CONSTRAINT `fk_SalesItems_Sales1`
     FOREIGN KEY (`sale_id`)
     REFERENCES `DBclothing`.`Sales` (`sales_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Sales Items_Product1`
+  CONSTRAINT `fk_SalesItems_Product1`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
     ON DELETE NO ACTION
@@ -136,9 +260,21 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales Items` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Restock`
--- -----------------------------------------------------
+--
+-- Dumping data for table `SalesItems`
+--
+INSERT INTO `SalesItems` VALUES
+(1, 5001, 1001, 2, 400.00),
+(2, 5001, 1002, 1, 700.00),
+(3, 5002, 1002, 1, 700.00),
+(4, 5003, 1001, 1, 400.00);
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`Restock`
+-- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Restock` (
   `restock_id` INT NOT NULL,
   `product_id` INT NOT NULL,
@@ -156,14 +292,24 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Restock` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Returns`
--- -----------------------------------------------------
+--
+-- Dumping data for table `Restock`
+--
+INSERT INTO `Restock` VALUES
+(6001, 1001, 'CottonWear Inc.', 50, 250.00, '2025-06-01'),
+(6002, 1002, 'DenimSupply Co.', 30, 500.00, '2025-06-03');
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`Returns`
+--
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Returns` (
   `return_id` INT NOT NULL,
   `sale_id` INT NOT NULL,
   `return_date` DATE NOT NULL,
-  `reason` VARCHAR(100) NOT NULL,
+  `reason` TEXT NOT NULL,
   PRIMARY KEY (`return_id`),
   INDEX `fk_Returns_Sales1_idx` (`sale_id` ASC) VISIBLE,
   CONSTRAINT `fk_Returns_Sales1`
@@ -174,23 +320,32 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Returns` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Return Items`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `DBclothing`.`Return Items` (
+--
+-- Dumping data for table `Returns`
+--
+INSERT INTO `Returns` VALUES
+(7001, 5001, '2025-06-13', 'Size too small'),
+(7002, 5003, '2025-06-14', 'Defective item');
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`ReturnItems`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`ReturnItems` (
   `return_item_id` INT NOT NULL,
   `return_id` INT NOT NULL,
   `product_id` INT NOT NULL,
   `quantity_returned` INT NOT NULL,
   PRIMARY KEY (`return_item_id`),
-  INDEX `fk_Return Items_Product1_idx` (`product_id` ASC) VISIBLE,
-  INDEX `fk_Return Items_Returns1_idx` (`return_id` ASC) VISIBLE,
-  CONSTRAINT `fk_Return Items_Product1`
+  INDEX `fk_ReturnItems_Product1_idx` (`product_id` ASC) VISIBLE,
+  INDEX `fk_ReturnItems_Returns1_idx` (`return_id` ASC) VISIBLE,
+  CONSTRAINT `fk_ReturnItems_Product1`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Return Items_Returns1`
+  CONSTRAINT `fk_ReturnItems_Returns1`
     FOREIGN KEY (`return_id`)
     REFERENCES `DBclothing`.`Returns` (`return_id`)
     ON DELETE NO ACTION
@@ -198,56 +353,56 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Return Items` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Stock Transfer`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `DBclothing`.`Stock Transfer` (
+--
+-- Dumping data for table `ReturnItems`
+--
+INSERT INTO `ReturnItems` VALUES
+(1, 7001, 1001, 1),
+(2, 7002, 1001, 1);
+
+-- ------------------------------------------------------
+
+
+--
+-- Table structure for table `DBclothing`.`StockTransfer`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`StockTransfer` (
   `transfer_id` INT NOT NULL,
   `product_id` INT NOT NULL,
   `source_branch_code` VARCHAR(11) NOT NULL,
   `dest_branch_code` VARCHAR(11) NOT NULL,
   `quantity_transferred` INT NOT NULL,
   `transfer_date` DATE NOT NULL,
-  `reason` VARCHAR(100) NOT NULL,
+  `reason` TEXT NOT NULL,
   PRIMARY KEY (`transfer_id`),
-  INDEX `fk_Stock Transfer_Branch1_idx` (`source_branch_code` ASC) VISIBLE,
-  INDEX `fk_Stock Transfer_Product2_idx` (`product_id` ASC) VISIBLE,
-  INDEX `fk_Stock Transfer_Branch2_idx` (`dest_branch_code` ASC) VISIBLE,
-  CONSTRAINT `fk_Stock Transfer_Branch1`
+  INDEX `fk_StockTransfer_Branch1_idx` (`source_branch_code` ASC) VISIBLE,
+  INDEX `fk_StockTransfer_Product2_idx` (`product_id` ASC) VISIBLE,
+  INDEX `fk_StockTransfer_Branch2_idx` (`dest_branch_code` ASC) VISIBLE,
+  CONSTRAINT `fk_StockTransfer_Branch1`
     FOREIGN KEY (`source_branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Stock Transfer_Product2`
+  CONSTRAINT `fk_StockTransfer_Product2`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Stock Transfer_Branch2`
+  CONSTRAINT `fk_StockTransfer_Branch2`
     FOREIGN KEY (`dest_branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+--
+-- Dumping data for table `StockTransfer`
+--
+INSERT INTO `StockTransfer` VALUES 
+(1, 1002, 'B001', 'B002', 10, '2025-06-15', 'Rebalancing inventory for promo'),
+(2, 1004, 'B003', 'B001', 5, '2025-06-16', 'High demand in main branch');
 
--- -----------------------------------------------------
--- Table `DBclothing`.`Member`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `DBclothing`.`Member` (
-  `member_id` INT NOT NULL,
-  `customer_id` INT NOT NULL,
-  `gender` VARCHAR(10) NOT NULL,
-  `date_registered` DATE NOT NULL,
-  PRIMARY KEY (`member_id`),
-  UNIQUE INDEX `customer_id_UNIQUE` (`customer_id` ASC) VISIBLE,
-  CONSTRAINT `fk_Member_Customer1`
-    FOREIGN KEY (`customer_id`)
-    REFERENCES `DBclothing`.`Customer` (`customer_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
+-- ------------------------------------------------------
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
