@@ -3,7 +3,6 @@ import java.awt.*;
 import java.sql.*;
 
 // RUN JAVA BUTTON NOT THE CODE RUNNER IN VSCODE!!!!
-// DiceDiceBaby : Access Code for PROG3 activity
 
 public class BranchModel extends JFrame {
     // Change these values to your database credentials if necessary. Credentials are based on my MacOS
