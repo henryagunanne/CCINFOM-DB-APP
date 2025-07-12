@@ -1,0 +1,106 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class DisplayData {
+    private final Font font = new Font("Arial", Font.PLAIN, 20);
+    
+    public void displayData(JFrame parent, ResultSet rs, String titleText, ActionListener backAction) {
+        parent.getContentPane().removeAll();
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        
+        JLabel dataTitle = new JLabel(titleText, SwingConstants.CENTER);
+        dataTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(dataTitle, BorderLayout.NORTH);
+        
+        JTable table = createTableFromResultSet(rs);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(backAction);
+        JPanel backPanel = new JPanel();
+        backPanel.add(backButton);
+        panel.add(backPanel, BorderLayout.SOUTH);
+        
+        parent.getContentPane().add(panel);
+        parent.revalidate();
+        parent.repaint();
+    }
+    
+    public JTable createTableFromResultSet(ResultSet rs) {
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            
+            String[] columnNames = new String[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                columnNames[i-1] = metaData.getColumnName(i);
+            }
+            
+            java.util.List<Object[]> data = new java.util.ArrayList<>();
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+                for (int i = 1; i <= columnCount; i++) {
+                    row[i-1] = rs.getObject(i);
+                }
+                data.add(row);
+            }
+            
+            Object[][] dataArray = data.toArray(new Object[0][]);
+            return new JTable(dataArray, columnNames);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new JTable();
+        }
+    }
+    
+    public void showStockTransfer(JFrame parent, JComboBox<String> sourceBranch, JComboBox<String> destBranch, 
+                                 JComboBox<String> productBox, JTextField quantityField, 
+                                 ActionListener submitAction, ActionListener backAction) {
+        parent.getContentPane().removeAll();
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel transferTitle = new JLabel("Stock Transfer", SwingConstants.CENTER);
+        transferTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(transferTitle, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Source Branch:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Destination Branch:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Product:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity:"), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(sourceBranch, gbc);
+        gbc.gridx = 1; gbc.gridy = 2; panel.add(destBranch, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; panel.add(productBox, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(quantityField, gbc);
+
+        JPanel buttonPanel = new JPanel();
+        JButton submitBtn = new JButton("Submit");
+        JButton backBtn = new JButton("Back");
+        
+        submitBtn.addActionListener(submitAction);
+        backBtn.addActionListener(backAction);
+        
+        buttonPanel.add(submitBtn);
+        buttonPanel.add(backBtn);
+
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(buttonPanel, gbc);
+
+        parent.getContentPane().add(panel);
+        parent.revalidate();
+        parent.repaint();
+    }
+}
+
+
