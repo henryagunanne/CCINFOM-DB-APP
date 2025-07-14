@@ -1,15 +1,33 @@
-import javax.swing.*;
-import java.awt.*;
-import java.sql.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 
 // RUN JAVA BUTTON NOT THE CODE RUNNER IN VSCODE!!!!
-
 public class BranchModel extends JFrame {
     // Change these values to your database credentials if necessary. Credentials are based on my MacOS
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
