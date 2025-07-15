@@ -269,7 +269,7 @@ public class ProductModel extends JFrame{
                     if(strSaleDate == null){
                         JOptionPane.showMessageDialog(this, "No items were sold on this date", "Notice", JOptionPane.WARNING_MESSAGE);
                     }
-                    
+
                     if (qty <= 0){
                         throw new NumberFormatException();
                     }
@@ -440,5 +440,10 @@ public class ProductModel extends JFrame{
             return false;
         }
         return false;
+    }
+
+
+    private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost){
+        String 
     }
 }

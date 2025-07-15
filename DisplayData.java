@@ -178,8 +178,76 @@ public class DisplayData {
         gbc.gridx = 1; gbc.gridy = 5; panel.add(reasonField, gbc);
 
         JPanel buttonPanel = new JPanel();
-        JButton submitBtn = new JButton("Submit");
+        JButton submitBtn = new JButton("Submit Return");
+        submitBtn.setBackground(Color.decode("#008000"));
+        submitBtn.setForeground(Color.WHITE);
+        submitBtn.setOpaque(true);
+        submitBtn.setBorderPainted(false);
+
         JButton backBtn = new JButton("Back");
+        backBtn.setBackground(Color.decode("#880808"));
+        backBtn.setForeground(Color.WHITE);
+        backBtn.setOpaque(true);
+        backBtn.setBorderPainted(false);
+        
+        submitBtn.addActionListener(submitAction);
+        backBtn.addActionListener(backAction);
+        
+        buttonPanel.add(submitBtn);
+        buttonPanel.add(backBtn);
+
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(buttonPanel, gbc);
+
+        parent.getContentPane().add(panel);
+        parent.revalidate();
+        parent.repaint();
+    }
+
+
+    public void showRestockProducts(JFrame parent, JComboBox<String> branchName, JComboBox<String> productName, 
+                                    JComboBox<String> supplier, JTextField quantityField, JLabel costLabel, 
+                                    ActionListener submitAction, ActionListener backAction){
+        parent.getContentPane().removeAll();
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel returnTitle = new JLabel("Restock Product", SwingConstants.CENTER);
+        returnTitle.setFont(titleFont);
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(returnTitle, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch Name:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Product to Restock: "), gbc);
+        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Choose Supplier:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity to restock :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Cost :"), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(branchName, gbc);
+        gbc.gridx = 1; gbc.gridy = 2; panel.add(productName, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; panel.add(supplier, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; panel.add(costLabel, gbc);
+
+        JPanel buttonPanel = new JPanel();
+        JButton submitBtn = new JButton("Submit Return");
+        submitBtn.setBackground(Color.decode("#008000"));
+        submitBtn.setForeground(Color.WHITE);
+        submitBtn.setOpaque(true);
+        submitBtn.setBorderPainted(false);
+
+        JButton backBtn = new JButton("Back");
+        backBtn.setBackground(Color.decode("#880808"));
+        backBtn.setForeground(Color.WHITE);
+        backBtn.setOpaque(true);
+        backBtn.setBorderPainted(false);
         
         submitBtn.addActionListener(submitAction);
         backBtn.addActionListener(backAction);
