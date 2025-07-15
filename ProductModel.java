@@ -8,13 +8,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -97,6 +98,7 @@ public class ProductModel extends JFrame{
         });
 
         btn2.addActionListener(e -> showPurchaseHistory());
+        btn3.addActionListener(e -> displayProcessReturn());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -246,25 +248,197 @@ public class ProductModel extends JFrame{
     }
 
 
-    private boolean processReturn(String saleDate, String productName, String reason, int quantity){
-        String getSaleIdQuery = "SELECT sale_id FROM Sales WHERE sale_date = ?";
+    private void displayProcessReturn(){
+        JComboBox<String> branchCode  = new JComboBox<>(displayData.getComboBoxData("SELECT branch_code FROM Branch ORDER BY branch_code"));
+        JComboBox<String> saleDate  = new JComboBox<>(displayData.getComboBoxData("SELECT sale_date FROM Sales ORDER BY sale_date ASC"));
+       
+        String strSaleDate = (String) saleDate.getSelectedItem();
+        JComboBox<String> returnItem = new JComboBox<>(displayData.getComboBoxData("SELECT p.product_name FROM Products p JOIN SalesItem i ON i.product_id = p.product_id JOIN Sales s ON s.sale_id = i.sale_id WHERE sale_date = "+ strSaleDate));
+            
+        JTextField quantityField = new JTextField();
+        JTextField reasonField = new JTextField();
+
+        displayData.showProcessReturn(this, branchCode, saleDate, returnItem, quantityField, reasonField, 
+            e -> { 
+                try {
+                    String strBranchCode = (String) branchCode.getSelectedItem();
+                    String strReturnItem = (String) returnItem.getSelectedItem();
+                    String reason = (String) reasonField.getText();
+                    int qty = Integer.parseInt(quantityField.getText());
+
+                    if(strSaleDate == null){
+                        JOptionPane.showMessageDialog(this, "No items were sold on this date", "Notice", JOptionPane.WARNING_MESSAGE);
+                    }
+                    
+                    if (qty <= 0){
+                        throw new NumberFormatException();
+                    }
+                    
+                    if(processReturn(strBranchCode, strSaleDate, strReturnItem, reason, qty)){
+                        JOptionPane.showMessageDialog(this, "Item returned successfully!");
+                    }
+                }catch (NumberFormatException ex) {
+
+                }
+                
+            }, e -> productMenu());
+    }
+
+
+    private boolean processReturn(String branchCode, String saleDate, String productName, String reason, int quantity){
+        String getSaleIdQuery = "SELECT s.sale_id FROM Sales s JOIN SaleItems i ON i.sale_id = s.sale_id WHERE sale_date = ? AND product_id = ? AND branch_code = ?";
         String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
-        String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sale_id = ? AND product_id = ?";;
-        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sale_id = ? AND sale_date = ?";
-        String DeleteSalesQuery = "DELETE FROM Sales WHERE sale_id = ? AND sale_date = ?";
-        String updateSaleItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sale_id = ? AND product_id = ?";
-        String DeleteSaleItemsQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
+        String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sale_id = ? AND product_id = ?";
+        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sale_id = ? AND sale_date = ? and branch_code = ?";
+        String deleteSalesQuery = "DELETE FROM Sales s JOIN SaleItems i ON i.sale_id = s.sale_id WHERE s.sale_id = ? AND s.sale_date = ? AND i.product_id = ?";
+        String updateSalesItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sale_id = ? AND product_id = ?";
+        String deleteSalesItemsQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
         String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?, ?)";
-        String updateReturnItemsQuery = "INSERT INTO ReturnItems VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity + ?";
+        String updateReturnItemsQuery = "INSERT INTO ReturnItems VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + ?";
 
 
         try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
             conn.setAutoCommit(false); // Start transaction
+            
+            try (PreparedStatement getSaleIdStmt = conn.prepareStatement(getSaleIdQuery);
+                 PreparedStatement getProductIdStmt = conn.prepareStatement(getProductIdQuery);) {
+
+                getProductIdStmt.setString(1, productName);
+                int productId = -1;
+                try (ResultSet rs = getProductIdStmt.executeQuery()) { 
+                    if (rs.next()) {
+                        productId = rs.getInt(1);
+                    }
+                }
+
+                getSaleIdStmt.setString(1, saleDate);
+                getSaleIdStmt.setInt(2, productId);
+                getSaleIdStmt.setString(3, branchCode);
+                int saleId = -1;
+                try (ResultSet rs = getSaleIdStmt.executeQuery()) {
+                    if (rs.next()){
+                        saleId = rs.getInt(1);
+                    }
+                }
+
+                if (saleId == -1 || productId == -1) {
+                    JOptionPane.showMessageDialog(this, "Invalid date or product selected.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                // check quantity to be returned
+                int quantity_ordered;
+                try (PreparedStatement checkQuantityStmt = conn.prepareStatement(checkQuantityQuery)) {
+
+                    checkQuantityStmt.setInt(1, saleId);
+                    checkQuantityStmt.setInt(2, productId);
+                    try (ResultSet rs = checkQuantityStmt.executeQuery()) {
+                        quantity_ordered =  rs.getInt("quantity_ordered");
+                        if (!rs.next() || quantity_ordered < quantity) {
+                            JOptionPane.showMessageDialog(this, "You cannot return more than the ordered quantity of " + quantity_ordered, "Error", JOptionPane.ERROR_MESSAGE);
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
 
 
+                // update tables
+                try (PreparedStatement updateSalesStmt = conn.prepareStatement(updateSalesQuery);
+                     PreparedStatement deleteSalesStmt = conn.prepareStatement(deleteSalesQuery);
+                     PreparedStatement updateSalesItemsStmt = conn.prepareStatement(updateSalesItemsQuery);
+                     PreparedStatement deleteSalesItemsStmt = conn.prepareStatement(deleteSalesItemsQuery);
+                     PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
+                     PreparedStatement updateReturnItemsStmt = conn.prepareStatement(updateReturnItemsQuery)) {
+
+                    String unitPrice = "Select unit_price FROM SaleItems WHERE sale_id = " + saleId + "AND product_id = " + productId;
+                    String strReturnId = "SELECT * FROM Returns ORDER BY return_id DESC LIMIT 1;";
+                    String strReturnItemId = "SELECT * FROM ReturnItems ORDER BY return_item_id DESC LIMIT 1;";
+
+                    LocalDate today = LocalDate.now();
+                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-mm-dd"));
+
+                    double returnedPrice;
+                    int returnId, returnItemId;
+            
+                    try(ResultSet rsPrice = executeQuery(unitPrice);
+                        ResultSet rsReturnId = executeQuery(strReturnId);
+                        ResultSet rsReturnItemId = executeQuery(strReturnItemId)){
+
+                        returnedPrice = rsPrice.getDouble("total_amount") * quantity;
+                        returnId = rsReturnId.getInt("return_id");
+                        returnItemId = rsReturnItemId.getInt("return_item_id");
+
+                        if (quantity < quantity_ordered && quantity > 0){
+
+                            updateSalesStmt.setDouble(1, returnedPrice);
+                            updateSalesStmt.setInt(2, saleId);
+                            updateSalesStmt.setString(3, saleDate);
+                            updateSalesStmt.setString(4, branchCode);
+                            updateSalesStmt.executeUpdate();
+
+                            updateSalesItemsStmt.setInt(1, quantity);
+                            updateSalesItemsStmt.setInt(2, saleId);
+                            updateSalesItemsStmt.setInt(3, productId);
+                            updateSalesItemsStmt.executeUpdate();
+                    
+                            updateReturnsStmt.setInt(1, returnId + 1);
+                            updateReturnsStmt.setInt(2, saleId);
+                            updateReturnsStmt.setString(3, dateStr);
+                            updateReturnsStmt.setString(4, reason);
+                            updateReturnsStmt.executeUpdate();
+                            
+                            updateReturnItemsStmt.setInt(1, returnItemId + 1);
+                            updateReturnItemsStmt.setInt(2, returnId);
+                            updateReturnItemsStmt.setInt(3, productId);
+                            updateReturnItemsStmt.setInt(4, quantity);
+                            updateReturnItemsStmt.setInt(1, quantity);
+                            updateReturnItemsStmt.executeUpdate();
+                            
+                            conn.commit(); // Commit transaction
+                            return true;
+
+                        }else if (quantity_ordered == quantity){
+                            deleteSalesStmt.setInt(1, saleId);
+                            deleteSalesStmt.setString(2, saleDate);
+                            deleteSalesStmt.setInt(3, productId);
+                            deleteSalesStmt.executeUpdate();
+    
+                            deleteSalesItemsStmt.setInt(1, saleId);
+                            deleteSalesItemsStmt.setInt(2, productId);
+                            deleteSalesItemsStmt.executeUpdate();
+
+                            updateReturnsStmt.setInt(1, returnId + 1);
+                            updateReturnsStmt.setInt(2, saleId);
+                            updateReturnsStmt.setString(3, dateStr);
+                            updateReturnsStmt.setString(4, reason);
+                            updateReturnsStmt.executeUpdate();
+                            
+                            updateReturnItemsStmt.setInt(1, returnItemId + 1);
+                            updateReturnItemsStmt.setInt(2, returnId);
+                            updateReturnItemsStmt.setInt(3, productId);
+                            updateReturnItemsStmt.setInt(4, quantity);
+                            updateReturnItemsStmt.setInt(1, quantity);
+                            updateReturnItemsStmt.executeUpdate();
+
+                            conn.commit(); // Commit transaction
+                            return true;
+                        }else if(quantity <= 0){
+                            JOptionPane.showMessageDialog(this, "Quantity has to be atleast 1", "Error", JOptionPane.ERROR_MESSAGE);
+                            return false;
+                        }  
+                    }
+                }
+            }catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred while processing return: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
         }catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+        return false;
     }
 }
