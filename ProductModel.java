@@ -26,6 +26,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class ProductModel extends JFrame{
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
@@ -99,6 +101,7 @@ public class ProductModel extends JFrame{
 
         btn2.addActionListener(e -> showPurchaseHistory());
         btn3.addActionListener(e -> displayProcessReturn());
+        btn4.addActionListener(e -> displayRestockProduct());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -276,6 +279,7 @@ public class ProductModel extends JFrame{
                     
                     if(processReturn(strBranchCode, strSaleDate, strReturnItem, reason, qty)){
                         JOptionPane.showMessageDialog(this, "Item returned successfully!");
+                        productMenu();
                     }
                 }catch (NumberFormatException ex) {
 
@@ -443,7 +447,142 @@ public class ProductModel extends JFrame{
     }
 
 
+    private void displayRestockProduct(){
+
+        JComboBox<String> branchName = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM Branch ORDER BY branch_name"));
+        JComboBox<String> productName = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM Product ORDER BY product_name"));
+        JComboBox<String> supplier = new JComboBox<>(displayData.getComboBoxData("SELECT supplier_name FROM Supplier ORDER BY supplier_name")); 
+        JTextField quantityField = new JTextField();
+        JLabel costLabel = new JLabel("₱0.00");  
+
+        String product = (String) productName.getSelectedItem();
+        String unitPriceQuery = "SELECT unit_price FROM Product WHERE product_name = " + product;
+
+        
+        double unitPrice;
+        try(ResultSet rs = executeQuery(unitPriceQuery)){
+            unitPrice = rs.getDouble("unit_price");
+        
+            quantityField.getDocument().addDocumentListener(new DocumentListener() {
+                public void insertUpdate(DocumentEvent e) { updateCost(); }
+                public void removeUpdate(DocumentEvent e) { updateCost(); }
+                public void changedUpdate(DocumentEvent e) { updateCost(); }
+            
+                private void updateCost() {
+                    try {
+                        
+                        int quantity = Integer.parseInt(quantityField.getText());
+                        double cost = unitPrice * 0.7 * quantity;
+                        costLabel.setText(String.format("₱%.2f", cost));
+                    } catch (NumberFormatException ex) {
+                        costLabel.setText("₱0.00"); // Reset or show error if input is invalid
+                        JOptionPane.showMessageDialog(null, "Invalid quantity");
+                    }
+                }
+            });
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        displayData.showRestockProducts(this, branchName, productName, supplier, quantityField, costLabel, e -> {
+                
+                try {
+                    String branch = (String) branchName.getSelectedItem();
+                    String strSupplier = (String) supplier.getSelectedItem();
+                    int quantity = Integer.parseInt(quantityField.getText());
+                    double cost = Double.parseDouble(costLabel.getText());
+
+                    if(restockProduct(branch, product, strSupplier, quantity, cost)){
+                        JOptionPane.showMessageDialog(this, "Product restocked successfully!");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
+                    productMenu();
+                }
+            }, e -> productMenu());
+    }
+
+
     private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost){
-        String 
+        String getBranchIdQuery = "SELECT branch_code FROM branch WHERE branch_name = ?";
+        String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
+        String getSupplierIdQuery = "SELECT supplier_id FROM Supplier WHERE supplier_name = ?";
+        String updateInventoryQuery = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
+        String updateRestockQuery = "INSERT INTO Restock VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            conn.setAutoCommit(false); // Start transaction
+
+            try (PreparedStatement getBranchIdStmt = conn.prepareStatement(getBranchIdQuery);
+                 PreparedStatement getProductIdStmt = conn.prepareStatement(getProductIdQuery);
+                 PreparedStatement getSupplierIdStmt = conn.prepareStatement(getSupplierIdQuery)) {
+
+                getBranchIdStmt.setString(1, branchName);
+                String branchId = null;
+                try (ResultSet rs = getBranchIdStmt.executeQuery()) {
+                    if (rs.next()){
+                        branchId = rs.getString(1);
+                    }
+                }
+
+                getProductIdStmt.setString(1, productName);
+                int productId = -1;
+                try (ResultSet rs = getProductIdStmt.executeQuery()) {
+                    if (rs.next()){
+                        productId = rs.getInt(1);
+                    }
+                }
+
+                getSupplierIdStmt.setString(1, supplier);
+                int supplierId = -1;
+                try (ResultSet rs = getSupplierIdStmt.executeQuery()) {
+                    if (rs.next()){
+                        supplierId = rs.getInt(1);
+                    }
+                }
+
+                if(branchId == null || productId == -1 || supplierId == -1){
+                    JOptionPane.showMessageDialog(this, "Invalid branch, product, or supplier selected.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+                
+                try(PreparedStatement updateInventoryStmt = conn.prepareStatement(updateInventoryQuery);
+                    PreparedStatement updateRestockStmt = conn.prepareStatement(updateRestockQuery)){
+
+                    String strRestockId = "SELECT * FROM Restock ORDER BY restock_id DESC LIMIT 1;";
+                     
+                    ResultSet rs = executeQuery(strRestockId);
+                    int restockId = rs.getInt("restock_id");
+
+                    LocalDate today = LocalDate.now();
+                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-mm-dd"));
+
+                    updateInventoryStmt.setInt(1, quantity);
+                    updateInventoryStmt.setString(2, branchId);
+                    updateInventoryStmt.setInt(3, productId);
+                    updateInventoryStmt.executeUpdate();
+
+                    updateRestockStmt.setInt(1, restockId);
+                    updateRestockStmt.setInt(2, productId);
+                    updateRestockStmt.setInt(3, supplierId);
+                    updateRestockStmt.setInt(4, quantity);
+                    updateRestockStmt.setDouble(5, cost);
+                    updateRestockStmt.setString(6, dateStr);
+                    updateRestockStmt.executeUpdate();
+                    
+                    conn.commit(); // Commit transaction
+                    return true;
+                }
+
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred during the restock: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

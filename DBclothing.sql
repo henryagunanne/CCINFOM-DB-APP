@@ -22,7 +22,7 @@ USE `DBclothing` ;
 -- Table structure for table `DBclothing`.`Branch`
 -- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Branch` (
-  `branch_code` VARCHAR(11) NOT NULL,
+  `branch_code` VARCHAR(5) NOT NULL,
   `branch_name` VARCHAR(45) NOT NULL,
   `location` VARCHAR(100) NOT NULL,
   `contact_number` VARCHAR(20) NOT NULL,
@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Product` (
   `size` VARCHAR(10) NOT NULL,
   `color` VARCHAR(45) NOT NULL,
   `category` VARCHAR(45) NOT NULL,
-  `quantity_in_stock` INT NOT NULL,
   `unit_price` DECIMAL(10,2) NOT NULL,
   `discontinued` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`product_id`))
@@ -62,53 +61,123 @@ ENGINE = InnoDB;
 -- Dumping data for table `products`
 -- 
 INSERT INTO `Product` VALUES
-(1001, 'MENS T-SHIRT', 'L', 'Black', 'Men', 100, 400.00, 'FALSE'),
-(1002, 'MENS LEVIS', '32', 'Black', 'Men', 80, 700.00, 'FALSE'),
-(1003, 'PALM TREE EMBROIDERY HOODIE', 'M', 'Pink', 'Women', 60, 2200.00, 'FALSE'),
-(1004, 'LINEN BRAND SHORTS', 'S', 'Orange', 'Women', 70, 1200.00, 'FALSE'),
-(1005, 'SCOTCH & SODA CONTRAST PANEL SHORTS', 'M', 'Pink', 'Women', 65, 2200.00, 'FALSE'),
-(1006, 'HALF FANCY SUMMER DRESS', 'M', 'Yellow', 'Women', 50, 1300.00, 'FALSE'),
-(1007, 'FLIX FLOX JEANS', '28', 'Blue', 'Women', 90, 1300.00, 'FALSE'),
-(1008, 'FANCY SWEATER', 'L', 'Yellow', 'Women', 85, 1500.00, 'FALSE'),
-(1009, 'VARSITY RIBBED MAXI DRESS WITH BELT', 'M', 'Blue', 'Women', 40, 4000.00, 'FALSE'),
-(1010, 'WOMENS JOSS PANTS', 'M', 'Blue', 'Women', 55, 3000.00, 'FALSE'),
-(1011, 'CONTRAST COLLAR COTTON JACKET', 'XL', 'Black', 'Winter', 30, 20000.00, 'FALSE'),
-(1012, 'DENIM VARSITY JACKET', 'L', 'Blue', 'Winter', 25, 15000.00, 'FALSE'),
-(1013, 'QUILTED GILET WITH CONTRAST DETAILS', 'L', 'Brown', 'Winter', 20, 12000.00, 'FALSE'),
-(1014, 'FAUX SUEDE JACKET WITH SHERPA COLLAR', 'M', 'Black', 'Winter', 20, 12000.00, 'FALSE'),
-(1015, 'FAUX SUEDE VARSITY BOMBER JACKET', 'M', 'Blue', 'Winter', 20, 18000.00, 'FALSE'),
-(1016, 'FAUX LEATHER OVERSIZED JACKET', 'L', 'Black', 'Winter', 20, 19000.00, 'FALSE'),
-(1017, 'FAUX SUEDE JACKET WITH ZIP', 'M', 'Green', 'Winter', 20, 17000.00, 'FALSE'),
-(1018, 'FAUX SUEDE VARSITY JACKET', 'L', 'Black', 'Winter', 20, 23000.00, 'FALSE'),
-(1019, 'FAUX SUEDE BIKER JACKET', 'L', 'Blue', 'Winter', 20, 21000.00, 'FALSE'),
-(1020, 'HAVANNA TROPIC PRINT SHIRT', 'L', 'Orange', 'Men', 70, 2200.00, 'FALSE'),
-(1021, 'COTTON-LINEN SHIRT', 'L', 'White', 'Men', 70, 1200.00, 'FALSE'),
-(1022, 'GRADIENT SLOGAN GRAPHIC T-SHIRT', 'M', 'White', 'Men', 80, 1600.00, 'FALSE'),
-(1023, 'STRIPED COTTON SHIRT', 'L', 'Blue', 'Men', 60, 1500.00, 'FALSE'),
-(1024, 'SLIM FIT TROUSERS', '32', 'Green', 'Men', 60, 2000.00, 'FALSE'),
-(1025, 'COLOR-BLOCK SHORTS WITH PRINT', 'M', 'Blue', 'Men', 60, 1800.00, 'FALSE'),
-(1026, 'COTTON CHINOS', '34', 'Black', 'Men', 70, 2500.00, 'FALSE'),
-(1027, 'TENNIS GRAPHIC HOODIE', 'M', 'Black', 'Kids', 40, 4000.00, 'FALSE'),
-(1028, 'SKATER FIT JEANS', '28', 'Green', 'Kids', 50, 3500.00, 'FALSE'),
-(1029, 'SMILE HOODED ZIPPER SWEATSHIRT', 'M', 'Purple', 'Kids', 45, 4500.00, 'FALSE'),
-(1030, 'SWEATSHIRT WITH CHECKERED PRINT DETAIL', 'L', 'Brown', 'Kids', 50, 4500.00, 'FALSE'),
-(1031, 'CHARACTER PRINTED HOODIE', 'S', 'Gray', 'Kids', 55, 3500.00, 'FALSE'),
-(1032, 'CHECKERED SHIRT WITH PATCH POCKET', 'M', 'Black', 'Kids', 50, 3000.00, 'FALSE'),
-(1033, 'PLAIN SWEATSHIRT WITH ZIPPER OPENING', 'M', 'Red', 'Kids', 60, 5000.00, 'FALSE'),
-(1034, 'STRAIGHT FIT JEANS', '30', 'Blue', 'Kids', 60, 4000.00, 'FALSE'),
-(1035, 'MOON NECK SWEATER', 'M', 'Orange', 'Winter', 25, 5000.00, 'FALSE'),
-(1036, 'EMPATHY SWEATSHIRT', 'M', 'Purple', 'Winter', 30, 2000.00, 'FALSE'),
-(1037, 'AARUSHI GREEN MUSLIN KURTA SET', 'M', 'Green', 'Women', 35, 2900.00, 'FALSE'),
-(1038, 'SRILEKHA SLUB STRAIGHT KURTA PALAZZO SET', 'M', 'Pink', 'Women', 40, 2200.00, 'FALSE'),
-(1039, 'CLASSIC TEE', 'M', 'Black', 'T-Shirt', 100, 399.99, 'FALSE'),
-(1040, 'DENIM JACKET', 'L', 'Blue', 'Outerwear', 50, 1499.50, 'FALSE'),
-(1041, 'SLIM FIT JEANS', '32', 'Dark Blue', 'Pants', 75, 999.00, 'FALSE'),
-(1042, 'HOODED SWEATSHIRT', 'L', 'Gray', 'Sweater', 60, 899.99, 'FALSE'),
-(1043, 'FORMAL SHIRT', 'M', 'White', 'Formalwear', 80, 799.00, 'FALSE');
+(1001, 'MENS T-SHIRT', 'L', 'Black', 'Men', 400.00, 'FALSE'),
+(1002, 'MENS LEVIS', '32', 'Black', 'Men', 700.00, 'FALSE'),
+(1003, 'PALM TREE EMBROIDERY HOODIE', 'M', 'Pink', 'Women', 2200.00, 'FALSE'),
+(1004, 'LINEN BRAND SHORTS', 'S', 'Orange', 'Women', 1200.00, 'FALSE'),
+(1005, 'SCOTCH & SODA CONTRAST PANEL SHORTS', 'M', 'Pink', 'Women', 2200.00, 'FALSE'),
+(1006, 'HALF FANCY SUMMER DRESS', 'M', 'Yellow', 'Women', 1300.00, 'FALSE'),
+(1007, 'FLIX FLOX JEANS', '28', 'Blue', 'Women', 1300.00, 'FALSE'),
+(1008, 'FANCY SWEATER', 'L', 'Yellow', 'Women', 1500.00, 'FALSE'),
+(1009, 'VARSITY RIBBED MAXI DRESS WITH BELT', 'M', 'Blue', 'Women', 4000.00, 'FALSE'),
+(1010, 'WOMENS JOSS PANTS', 'M', 'Blue', 'Women', 3000.00, 'FALSE'),
+(1011, 'CONTRAST COLLAR COTTON JACKET', 'XL', 'Black', 'Winter', 20000.00, 'FALSE'),
+(1012, 'DENIM VARSITY JACKET', 'L', 'Blue', 'Winter', 15000.00, 'FALSE'),
+(1013, 'QUILTED GILET WITH CONTRAST DETAILS', 'L', 'Brown', 'Winter', 12000.00, 'FALSE'),
+(1014, 'FAUX SUEDE JACKET WITH SHERPA COLLAR', 'M', 'Black', 'Winter', 12000.00, 'FALSE'),
+(1015, 'FAUX SUEDE VARSITY BOMBER JACKET', 'M', 'Blue', 'Winter', 18000.00, 'FALSE'),
+(1016, 'FAUX LEATHER OVERSIZED JACKET', 'L', 'Black', 'Winter', 19000.00, 'FALSE'),
+(1017, 'FAUX SUEDE JACKET WITH ZIP', 'M', 'Green', 'Winter', 17000.00, 'FALSE'),
+(1018, 'FAUX SUEDE VARSITY JACKET', 'L', 'Black', 'Winter', 23000.00, 'FALSE'),
+(1019, 'FAUX SUEDE BIKER JACKET', 'L', 'Blue', 'Winter', 21000.00, 'FALSE'),
+(1020, 'HAVANNA TROPIC PRINT SHIRT', 'L', 'Orange', 'Men', 2200.00, 'FALSE'),
+(1021, 'COTTON-LINEN SHIRT', 'L', 'White', 'Men', 1200.00, 'FALSE'),
+(1022, 'GRADIENT SLOGAN GRAPHIC T-SHIRT', 'M', 'White', 'Men', 1600.00, 'FALSE'),
+(1023, 'STRIPED COTTON SHIRT', 'L', 'Blue', 'Men', 1500.00, 'FALSE'),
+(1024, 'SLIM FIT TROUSERS', '32', 'Green', 'Men', 2000.00, 'FALSE'),
+(1025, 'COLOR-BLOCK SHORTS WITH PRINT', 'M', 'Blue', 'Men', 1800.00, 'FALSE'),
+(1026, 'COTTON CHINOS', '34', 'Black', 'Men', 2500.00, 'FALSE'),
+(1027, 'TENNIS GRAPHIC HOODIE', 'M', 'Black', 'Kids', 4000.00, 'FALSE'),
+(1028, 'SKATER FIT JEANS', '28', 'Green', 'Kids', 3500.00, 'FALSE'),
+(1029, 'SMILE HOODED ZIPPER SWEATSHIRT', 'M', 'Purple', 'Kids', 4500.00, 'FALSE'),
+(1030, 'SWEATSHIRT WITH CHECKERED PRINT DETAIL', 'L', 'Brown', 'Kids', 4500.00, 'FALSE'),
+(1031, 'CHARACTER PRINTED HOODIE', 'S', 'Gray', 'Kids', 3500.00, 'FALSE'),
+(1032, 'CHECKERED SHIRT WITH PATCH POCKET', 'M', 'Black', 'Kids', 3000.00, 'FALSE'),
+(1033, 'PLAIN SWEATSHIRT WITH ZIPPER OPENING', 'M', 'Red', 'Kids', 5000.00, 'FALSE'),
+(1034, 'STRAIGHT FIT JEANS', '30', 'Blue', 'Kids', 4000.00, 'FALSE'),
+(1035, 'MOON NECK SWEATER', 'M', 'Orange', 'Winter', 5000.00, 'FALSE'),
+(1036, 'EMPATHY SWEATSHIRT', 'M', 'Purple', 'Winter', 2000.00, 'FALSE'),
+(1037, 'AARUSHI GREEN MUSLIN KURTA SET', 'M', 'Green', 'Women', 2900.00, 'FALSE'),
+(1038, 'SRILEKHA SLUB STRAIGHT KURTA PALAZZO SET', 'M', 'Pink', 'Women', 2200.00, 'FALSE'),
+(1039, 'CLASSIC TEE', 'M', 'Black', 'T-Shirt', 399.99, 'FALSE'),
+(1040, 'DENIM JACKET', 'L', 'Blue', 'Outerwear', 1499.50, 'FALSE'),
+(1041, 'SLIM FIT JEANS', '32', 'Dark Blue', 'Pants', 999.00, 'FALSE'),
+(1042, 'HOODED SWEATSHIRT', 'L', 'Gray', 'Sweater', 899.99, 'FALSE'),
+(1043, 'FORMAL SHIRT', 'M', 'White', 'Formalwear', 799.00, 'FALSE');
 
 
 -- ------------------------------------------------------
 
+-- 
+-- Table `DBclothing`.`Inventory`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`Inventory` (
+  `branch_code` VARCHAR(5) NOT NULL,
+  `product_id` INT NOT NULL,
+  `quantity` INT NOT NULL,
+  INDEX `fk_Inventory_Branch1_idx` (`branch_code` ASC) VISIBLE,
+  INDEX `fk_Inventory_Product1_idx` (`product_id` ASC) VISIBLE,
+  PRIMARY KEY (`branch_code`, `product_id`),
+  CONSTRAINT `fk_Inventory_Branch1`
+    FOREIGN KEY (`branch_code`)
+    REFERENCES `DBclothing`.`Branch` (`branch_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_Inventory_Product1`
+    FOREIGN KEY (`product_id`)
+    REFERENCES `DBclothing`.`Product` (`product_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+-- 
+-- Dumping data for table `Customer`
+-- 
+INSERT INTO `Inventory` VALUES
+('B001', 1001, 40), ('B002', 1001, 30), ('B003', 1001, 30),
+('B001', 1002, 30), ('B002', 1002, 25), ('B003', 1002, 25),
+('B001', 1003, 20), ('B002', 1003, 20), ('B003', 1003, 20),
+('B001', 1004, 25), ('B002', 1004, 25), ('B003', 1004, 20),
+('B001', 1005, 25), ('B002', 1005, 20), ('B003', 1005, 20),
+('B001', 1006, 20), ('B002', 1006, 15), ('B003', 1006, 15),
+('B001', 1007, 30), ('B002', 1007, 30), ('B003', 1007, 30),
+('B001', 1008, 30), ('B002', 1008, 30), ('B003', 1008, 25),
+('B001', 1009, 15), ('B002', 1009, 15), ('B003', 1009, 10),
+('B001', 1010, 20), ('B002', 1010, 20), ('B003', 1010, 15),
+('B001', 1011, 10), ('B002', 1011, 10), ('B003', 1011, 10),
+('B001', 1012, 10), ('B002', 1012, 8),  ('B003', 1012, 7),
+('B001', 1013, 7),  ('B002', 1013, 7),  ('B003', 1013, 6),
+('B001', 1014, 7),  ('B002', 1014, 7),  ('B003', 1014, 6),
+('B001', 1015, 7),  ('B002', 1015, 7),  ('B003', 1015, 6),
+('B001', 1016, 7),  ('B002', 1016, 7),  ('B003', 1016, 6),
+('B001', 1017, 7),  ('B002', 1017, 7),  ('B003', 1017, 6),
+('B001', 1018, 7),  ('B002', 1018, 7),  ('B003', 1018, 6),
+('B001', 1019, 7),  ('B002', 1019, 7),  ('B003', 1019, 6),
+('B001', 1020, 25), ('B002', 1020, 25), ('B003', 1020, 20),
+('B001', 1021, 25), ('B002', 1021, 25), ('B003', 1021, 20),
+('B001', 1022, 30), ('B002', 1022, 25), ('B003', 1022, 25),
+('B001', 1023, 20), ('B002', 1023, 20), ('B003', 1023, 20),
+('B001', 1024, 20), ('B002', 1024, 20), ('B003', 1024, 20),
+('B001', 1025, 20), ('B002', 1025, 20), ('B003', 1025, 20),
+('B001', 1026, 25), ('B002', 1026, 25), ('B003', 1026, 20),
+('B001', 1027, 15), ('B002', 1027, 15), ('B003', 1027, 10),
+('B001', 1028, 20), ('B002', 1028, 15), ('B003', 1028, 15),
+('B001', 1029, 15), ('B002', 1029, 15), ('B003', 1029, 15),
+('B001', 1030, 20), ('B002', 1030, 15), ('B003', 1030, 15),
+('B001', 1031, 20), ('B002', 1031, 20), ('B003', 1031, 15),
+('B001', 1032, 20), ('B002', 1032, 15), ('B003', 1032, 15),
+('B001', 1033, 25), ('B002', 1033, 20), ('B003', 1033, 15),
+('B001', 1034, 25), ('B002', 1034, 20), ('B003', 1034, 15),
+('B001', 1035, 10), ('B002', 1035, 8),  ('B003', 1035, 7),
+('B001', 1036, 12), ('B002', 1036, 10), ('B003', 1036, 8),
+('B001', 1037, 12), ('B002', 1037, 12), ('B003', 1037, 11),
+('B001', 1038, 14), ('B002', 1038, 13), ('B003', 1038, 13),
+('B001', 1039, 40), ('B002', 1039, 30), ('B003', 1039, 30),
+('B001', 1040, 20), ('B002', 1040, 15), ('B003', 1040, 15),
+('B001', 1041, 30), ('B002', 1041, 25), ('B003', 1041, 20),
+('B001', 1042, 20), ('B002', 1042, 20), ('B003', 1042, 20),
+('B001', 1043, 30), ('B002', 1043, 25), ('B003', 1043, 25);
+-- ------------------------------------------------------
 
 -- 
 -- Table `DBclothing`.`Customer`
@@ -272,32 +341,77 @@ INSERT INTO `SalesItems` VALUES
 -- ------------------------------------------------------
 
 
+
 --
 -- Table structure for table `DBclothing`.`Restock`
 -- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Restock` (
   `restock_id` INT NOT NULL,
   `product_id` INT NOT NULL,
-  `supplier_name` VARCHAR(45) NOT NULL,
+  `supplier_id` INT NOT NULL,
   `quantity_added` INT NOT NULL,
   `cost_price` DECIMAL(10,2) NOT NULL,
   `restock_date` DATE NOT NULL,
   PRIMARY KEY (`restock_id`),
   INDEX `fk_Restock_Product1_idx` (`product_id` ASC) VISIBLE,
+  INDEX `fk_Restock_Supplier1_idx` (`supplier_id` ASC) VISIBLE,
   CONSTRAINT `fk_Restock_Product1`
     FOREIGN KEY (`product_id`)
-    REFERENCES `DBclothing`.`Product` (`product_id`)
+    REFERENCES `DBclothing`.`Product` (`product_id`),
+  CONSTRAINT `fk_Restock_Supplier1`
+    FOREIGN KEY (`supplier_id`)
+    REFERENCES `DBclothing`.`Supplier` (`supplier_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
 
 --
 -- Dumping data for table `Restock`
 --
 INSERT INTO `Restock` VALUES
-(6001, 1001, 'CottonWear Inc.', 50, 250.00, '2025-06-01'),
-(6002, 1002, 'DenimSupply Co.', 30, 500.00, '2025-06-03');
+(6001, 1007, 8002, 45, 52650.00, '2025-03-30'),
+(6002, 1012, 8013, 20, 240000.00, '2025-05-18'),
+(6003, 1022, 8005, 38, 48640.00, '2025-02-06'),
+(6004, 1028, 8015, 29, 91350.00, '2025-04-15'),
+(6005, 1042, 8014, 40, 26999.70, '2025-05-08'),
+(6006, 1015, 8007, 18, 194400.00, '2025-06-28'),
+(6007, 1034, 8004, 43, 103200.00, '2025-06-26'),
+(6008, 1014, 8008, 25, 225000.00, '2025-06-12'),
+(6009, 1037, 8009, 28, 40600.00, '2025-07-19'),
+(6010, 1027, 8011, 34, 81600.00, '2025-04-04'),
+(6011, 1040, 8006, 30, 40486.50, '2025-03-04'),
+(6012, 1003, 8010, 20, 35200.00, '2025-02-05'),
+(6013, 1013, 8001, 15, 162000.00, '2025-06-01'),
+(6014, 1031, 8003, 33, 57750.00, '2025-05-19'),
+(6015, 1011, 8001, 10, 180000.00, '2025-05-10'),
+(6016, 1032, 8005, 31, 55800.00, '2025-06-03'),
+(6017, 1021, 8002, 60, 64800.00, '2025-01-25'),
+(6018, 1024, 8013, 50, 75000.00, '2025-03-01'),
+(6019, 1010, 8010, 55, 99000.00, '2025-04-30'),
+(6020, 1008, 8006, 30, 33750.00, '2025-04-08'),
+(6021, 1002, 8001, 30, 10500.00, '2025-01-20'),
+(6022, 1030, 8015, 38, 102600.00, '2025-05-07'),
+(6023, 1026, 8004, 42, 78750.00, '2025-03-23'),
+(6024, 1035, 8014, 25, 112500.00, '2025-07-05'),
+(6025, 1017, 8013, 30, 306000.00, '2025-07-10'),
+(6026, 1020, 8005, 45, 74250.00, '2025-01-14'),
+(6027, 1016, 8008, 22, 250800.00, '2025-07-03'),
+(6028, 1025, 8012, 36, 58320.00, '2025-03-12'),
+(6029, 1036, 8009, 26, 31200.00, '2025-07-11'),
+(6030, 1001, 8001, 50, 18000.00, '2025-01-10'),
+(6031, 1006, 8007, 25, 19500.00, '2025-03-14'),
+(6032, 1005, 8011, 40, 61600.00, '2025-03-03'),
+(6033, 1043, 8012, 42, 30261.90, '2025-06-10'),
+(6034, 1009, 8010, 20, 56000.00, '2025-04-20'),
+(6035, 1019, 8014, 27, 510300.00, '2025-07-25'),
+(6036, 1004, 8006, 35, 37800.00, '2025-02-18'),
+(6037, 1041, 8015, 35, 31478.25, '2025-04-06'),
+(6038, 1039, 8003, 50, 17995.50, '2025-02-02'),
+(6039, 1018, 8002, 24, 496800.00, '2025-07-18'),
+(6040, 1023, 8004, 44, 59400.00, '2025-02-17'),
+(6041, 1029, 8011, 40, 99000.00, '2025-04-26'),
+(6042, 1038, 8007, 32, 63360.00, '2025-07-27');
 
 -- ------------------------------------------------------
 
@@ -403,6 +517,40 @@ INSERT INTO `StockTransfer` VALUES
 (2, 1004, 'B003', 'B001', 5, '2025-06-16', 'High demand in main branch');
 
 -- ------------------------------------------------------
+
+-- 
+-- Table structure for table `DBclothing`.`Supplier`
+-- 
+CREATE TABLE IF NOT EXISTS `DBclothing`.`Supplier` (
+  `supplier_id` INT NOT NULL,
+  `supplier_name` VARCHAR(45) NOT NULL,
+  `contact_person` VARCHAR(45) NOT NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `phone_no` VARCHAR(45) NOT NULL,
+  `address` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`supplier_id`))
+ENGINE = InnoDB;
+
+--
+-- Dumping data for table `Supplier`
+--
+INSERT INTO `Supplier` VALUES
+(8001, 'CottonWear Inc.', 'Maria Santos', 'maria.santos@cottonwear.com', '09171234567', '123 Main St, Quezon City'),
+(8002, 'DenimSupply Co.', 'John Tan', 'john.tan@denimsupply.com', '09281234567', '456 North Ave, Manila'),
+(8003, 'FashionFirst Ltd.', 'Lisa Reyes', 'lisa.reyes@fashionfirst.com', '09391234567', '789 Fashion Blvd, Cebu City'),
+(8004, 'WinterStyle Corp.', 'Arnold Gomez', 'arnold.gomez@winterstyle.com', '09491234567', '101 Chill Rd, Baguio City'),
+(8005, 'TrendyTots Inc.', 'Claire Dy', 'claire.dy@trendytots.com', '09591234567', '55 Kidswear St, Davao City'),
+(8006, 'StyleHub Apparel Co.', 'Daisy Jimenez', 'daisy.jimenez@stylehub.com', '09181234560', '88 Fashion Ave, Pasig City'),
+(8007, 'UrbanThread Corp.', 'Kyle Bernardo', 'kyle.bernardo@urbanthread.com', '09185551234', '45 6th Ave, Makati City'),
+(8008, 'TropicWear Textiles', 'Celine Abad', 'celine.abad@tropicwear.com', '09091234456', '13 Rizal Blvd, Davao City'),
+(8009, 'GreenStitch Clothing', 'Eduardo Lim', 'eduardo.lim@greenstitch.com', '09182227890', '200 Lopez Jaena St, Cebu City'),
+(8010, 'MetroStyle Garments', 'Lea Santiago', 'lea.santiago@metrostyle.com', '09285550999', 'Unit 5, MetroMall, Manila'),
+(8011, 'Indigo Fabrics PH', 'Martin Reyes', 'martin.reyes@indigofabrics.com', '09291231234', 'Km 6, National Rd, Batangas'),
+(8012, 'PeakWear Industries', 'Ramon Bautista', 'ramon.bautista@peakwear.com', '09398887766', 'SME Park, Bacolod City'),
+(8013, 'Pine & Cotton Textiles', 'Althea Cruz', 'althea.cruz@pinecotton.com', '09099887766', 'Purok 7, Ilocos Norte'),
+(8014, 'NeoWeave Clothing Co.', 'Dennis Lao', 'dennis.lao@neoweave.com', '09221122334', 'Blk 3 Lot 12, QC Industrial Zone'),
+(8015, 'Zest Outfitters Ltd.', 'Ivy Domingo', 'ivy.domingo@zestoutfitters.com', '09178889900', 'Level 3, Zest Plaza, Baguio City');
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

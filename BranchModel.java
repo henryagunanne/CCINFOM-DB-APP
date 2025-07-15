@@ -173,9 +173,9 @@ public class BranchModel extends JFrame {
     private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
         String getBranchIdQuery = "SELECT branch_code FROM branch WHERE branch_name = ?";
         String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
-        String checkStockQuery = "SELECT quantity FROM inventory WHERE branch_code = ? AND product_id = ?";
-        String updateSourceQuery = "UPDATE inventory SET quantity = quantity - ? WHERE branch_code = ? AND product_id = ?";
-        String updateDestQuery = "INSERT INTO inventory (branch_code, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?";
+        String checkStockQuery = "SELECT quantity FROM Inventory WHERE branch_code = ? AND product_id = ?";
+        String updateSourceQuery = "UPDATE Inventory SET quantity = quantity - ? WHERE branch_code = ? AND product_id = ?";
+        String updateDestQuery = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?";
 
         try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
             conn.setAutoCommit(false); // Start transaction
