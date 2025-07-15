@@ -102,6 +102,7 @@ public class ProductModel extends JFrame{
         btn2.addActionListener(e -> showPurchaseHistory());
         btn3.addActionListener(e -> displayProcessReturn());
         btn4.addActionListener(e -> displayRestockProduct());
+        prevBtn.addActionListener(e -> new MainMenuGUI());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

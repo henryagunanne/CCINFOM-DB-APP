@@ -33,6 +33,7 @@ public class BranchModel extends JFrame {
     final public String b1Text = "Check Branch Records";
     final public String b2Text = "Branch & Active Sales Reps";
     final public String b3Text = "Transfer Inventory";
+    final public String prevText = "Back";
 
     final Font font = new Font("Arial", Font.PLAIN, 20);
     final Dimension buttonSize = new Dimension(350, 50); // width, height
@@ -71,6 +72,13 @@ public class BranchModel extends JFrame {
         btn2.setPreferredSize(buttonSize);
         btn3.setPreferredSize(buttonSize);
 
+        JButton prevBtn = new JButton(prevText);
+        prevBtn.setFont(font);
+        prevBtn.setBackground(Color.decode("#880808"));
+        prevBtn.setForeground(Color.WHITE);
+        prevBtn.setOpaque(true);
+        prevBtn.setBorderPainted(false);
+
         btn1.addActionListener(e -> {
             ResultSet rs = getBranchResultSet();
             if (rs != null) {
@@ -90,6 +98,7 @@ public class BranchModel extends JFrame {
         });
 
         btn3.addActionListener(e -> showStockTransfer());
+        prevBtn.addActionListener(e -> new MainMenuGUI());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -106,6 +115,9 @@ public class BranchModel extends JFrame {
         
         gbc.gridy = 3;
         mainPanel.add(btn3, gbc);
+
+        gbc.gridy = 4;
+        mainPanel.add(prevBtn, gbc);
 
         getContentPane().add(mainPanel);
         revalidate();
