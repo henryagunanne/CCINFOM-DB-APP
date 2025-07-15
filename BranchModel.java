@@ -113,9 +113,9 @@ public class BranchModel extends JFrame {
     }
 
     private void showStockTransfer() {
-        sourceBranch = new JComboBox<>(getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
-        destBranch = new JComboBox<>(getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
-        productBox = new JComboBox<>(getComboBoxData("SELECT product_name FROM product ORDER BY product_name"));
+        sourceBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
+        destBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
+        productBox = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM product ORDER BY product_name"));
         quantityField = new JTextField();
         
         displayData.showStockTransfer(this, sourceBranch, destBranch, productBox, quantityField,
@@ -169,23 +169,6 @@ public class BranchModel extends JFrame {
         }
     }
     
-    private String[] getComboBoxData(String query) {
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-
-            java.util.List<String> dataList = new java.util.ArrayList<>();
-            while (rs.next()) {
-                dataList.add(rs.getString(1));
-            }
-            
-            return dataList.toArray(new String[0]);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            
-            return new String[0];
-        }
-    }
 
     private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
         String getBranchIdQuery = "SELECT branch_code FROM branch WHERE branch_name = ?";

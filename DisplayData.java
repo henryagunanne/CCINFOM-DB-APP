@@ -5,9 +5,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -20,7 +23,12 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 public class DisplayData {
+    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
+    final private String USERNAME = "root";
+    final private String PASSWORD = "AGUnanne1";
+
     private final Font font = new Font("Arial", Font.PLAIN, 20);
+    final Font titleFont = new Font("Arial", Font.BOLD, 25);
     
     public void displayData(JFrame parent, ResultSet rs, String titleText, ActionListener backAction) {
         parent.getContentPane().removeAll();
@@ -90,7 +98,7 @@ public class DisplayData {
         panel.add(transferTitle, gbc);
 
         gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Source Branch:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch Code:"), gbc);
         gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Destination Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Product:"), gbc);
         gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity:"), gbc);
@@ -111,6 +119,75 @@ public class DisplayData {
         buttonPanel.add(backBtn);
 
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(buttonPanel, gbc);
+
+        parent.getContentPane().add(panel);
+        parent.revalidate();
+        parent.repaint();
+    }
+
+    public String[] getComboBoxData(String query) {
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            java.util.List<String> dataList = new java.util.ArrayList<>();
+            while (rs.next()) {
+                dataList.add(rs.getString(1));
+            }
+            
+            return dataList.toArray(new String[0]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            
+            return new String[0];
+        }
+    }
+
+
+    public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
+                                 JComboBox<String> returnItem, JTextField quantityField, JTextField reasonField, 
+                                 ActionListener submitAction, ActionListener backAction){
+
+        parent.getContentPane().removeAll();
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel returnTitle = new JLabel("Process Return", SwingConstants.CENTER);
+        returnTitle.setFont(titleFont);
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        panel.add(returnTitle, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch code:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date (YYYY-MM-DD): "), gbc);
+        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Item to return:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity to return :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Reason :"), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(branchCode, gbc);
+        gbc.gridx = 1; gbc.gridy = 2; panel.add(saleDate, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; panel.add(returnItem, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; panel.add(reasonField, gbc);
+
+        JPanel buttonPanel = new JPanel();
+        JButton submitBtn = new JButton("Submit");
+        JButton backBtn = new JButton("Back");
+        
+        submitBtn.addActionListener(submitAction);
+        backBtn.addActionListener(backAction);
+        
+        buttonPanel.add(submitBtn);
+        buttonPanel.add(backBtn);
+
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
         parent.getContentPane().add(panel);
