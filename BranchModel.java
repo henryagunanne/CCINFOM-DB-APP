@@ -1,4 +1,11 @@
-import java.awt.Color;
+// Simplified the imports
+
+import javax.swing.*;
+import java.awt.*;
+// import java.awt.event.*;
+import java.sql.*;
+
+/*import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -19,7 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
+import javax.swing.WindowConstants;*/
 
 // RUN JAVA BUTTON NOT THE CODE RUNNER IN VSCODE!!!!
 public class BranchModel extends JFrame {
@@ -27,7 +34,7 @@ public class BranchModel extends JFrame {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
+    final private String PASSWORD = "imagentumr1@";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
@@ -43,6 +50,12 @@ public class BranchModel extends JFrame {
     private DisplayData displayData = new DisplayData();
 
     public BranchModel() {
+        try {
+            Class.forName(DRIVER);
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
         setTitle("Branch Record");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(800, 400);
@@ -133,6 +146,7 @@ public class BranchModel extends JFrame {
         displayData.showStockTransfer(this, sourceBranch, destBranch, productBox, quantityField,
             e -> {
                 try {
+
                     String src = (String) sourceBranch.getSelectedItem();
                     String dst = (String) destBranch.getSelectedItem();
                     String product = (String) productBox.getSelectedItem();

@@ -1,5 +1,13 @@
+// Simplified the imports
 
-import java.awt.BorderLayout;
+import javax.swing.*;
+import javax.swing.event.*;
+import java.awt.*;
+import java.sql.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+
+/*import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -27,12 +35,13 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentListener;*/
 
 public class ProductModel extends JFrame{
+    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
+    final private String PASSWORD = "imagentumr1@";
 
     final public String opening = "Product Records Management";
     final public String b1Text = "View Product Records";
@@ -49,6 +58,13 @@ public class ProductModel extends JFrame{
 
     public ProductModel(){
         super("Product Records");
+        try {
+            Class.forName(DRIVER);
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+        // super("Product Records");
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         setSize(800, 400);
