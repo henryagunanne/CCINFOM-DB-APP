@@ -274,10 +274,11 @@ public class ProductModel extends JFrame{
                         JOptionPane.showMessageDialog(this, "No items were sold on this date", "Notice", JOptionPane.WARNING_MESSAGE);
                     }
 
-                    if (qty <= 0){
+                    if(qty <= 0){
+                        JOptionPane.showMessageDialog(this, "Quantity has to be atleast 1", "Error", JOptionPane.ERROR_MESSAGE);
                         throw new NumberFormatException();
                     }
-                    
+
                     if(processReturn(strBranchCode, strSaleDate, strReturnItem, reason, qty)){
                         JOptionPane.showMessageDialog(this, "Item returned successfully!");
                         productMenu();
@@ -428,10 +429,7 @@ public class ProductModel extends JFrame{
 
                             conn.commit(); // Commit transaction
                             return true;
-                        }else if(quantity <= 0){
-                            JOptionPane.showMessageDialog(this, "Quantity has to be atleast 1", "Error", JOptionPane.ERROR_MESSAGE);
-                            return false;
-                        }  
+                        }
                     }
                 }
             }catch (SQLException e) {
