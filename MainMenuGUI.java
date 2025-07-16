@@ -29,6 +29,7 @@ public class MainMenuGUI extends JFrame{
         setBackground(Color.WHITE);
         setLayout(new BorderLayout());
         setSize(800, 400);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         mainMenu();

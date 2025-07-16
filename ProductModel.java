@@ -52,6 +52,7 @@ public class ProductModel extends JFrame{
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         setSize(800, 400);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         productMenu();
