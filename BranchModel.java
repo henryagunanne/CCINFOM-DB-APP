@@ -34,7 +34,7 @@ public class BranchModel extends JFrame {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";

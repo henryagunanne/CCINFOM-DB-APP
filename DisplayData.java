@@ -33,7 +33,7 @@ public class DisplayData {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "AGUnanne1";
     
     static {
         try {
@@ -114,7 +114,7 @@ public class DisplayData {
         panel.add(transferTitle, gbc);
 
         gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch Code:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Source Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Destination Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Product:"), gbc);
         gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity:"), gbc);
@@ -162,9 +162,11 @@ public class DisplayData {
 
 
     public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
-                                 JComboBox<String> returnItem, JTextField quantityField, JTextField reasonField, 
-                                 ActionListener submitAction, ActionListener backAction){
+                                 JComboBox<String> customerName, JLabel customerId, JComboBox<String> returnItem,
+                                 JTextField quantityField, JTextField reasonField, ActionListener submitAction, 
+                                 ActionListener backAction){
 
+                                 
         parent.getContentPane().removeAll();
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -182,16 +184,20 @@ public class DisplayData {
 
         gbc.gridwidth = 1;
         gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch code:"), gbc);
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date (YYYY-MM-DD): "), gbc);
-        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Item to return:"), gbc);
-        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity to return :"), gbc);
-        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Reason :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date: "), gbc);
+        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Customer Name: "), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Customer ID: "), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Item to return:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Quantity to return :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 7; panel.add(new JLabel("Reason :"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(branchCode, gbc);
         gbc.gridx = 1; gbc.gridy = 2; panel.add(saleDate, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; panel.add(returnItem, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; panel.add(quantityField, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; panel.add(reasonField, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; panel.add(customerName, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(customerId, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; panel.add(returnItem, gbc);
+        gbc.gridx = 1; gbc.gridy = 6; panel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 7; panel.add(reasonField, gbc);
 
         JPanel buttonPanel = new JPanel();
         JButton submitBtn = new JButton("Submit Return");
@@ -212,7 +218,7 @@ public class DisplayData {
         buttonPanel.add(submitBtn);
         buttonPanel.add(backBtn);
 
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
         parent.getContentPane().add(panel);
@@ -253,7 +259,7 @@ public class DisplayData {
         gbc.gridx = 1; gbc.gridy = 5; panel.add(costLabel, gbc);
 
         JPanel buttonPanel = new JPanel();
-        JButton submitBtn = new JButton("Submit Return");
+        JButton submitBtn = new JButton("Submit");
         submitBtn.setBackground(Color.decode("#008000"));
         submitBtn.setForeground(Color.WHITE);
         submitBtn.setOpaque(true);

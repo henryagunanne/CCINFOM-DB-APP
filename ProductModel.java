@@ -3,6 +3,7 @@
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -41,7 +42,7 @@ public class ProductModel extends JFrame{
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "Product Records Management";
     final public String b1Text = "View Product Records";
@@ -195,7 +196,7 @@ public class ProductModel extends JFrame{
             if (productPurchaseHistory(selectedProduct) != null || selectedProduct != null) {
                 displayData.displayData(this, productPurchaseHistory(selectedProduct), "Product History", ev -> showPurchaseHistory());
             } else {
-                JOptionPane.showMessageDialog(this, "Database connection failed!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Database connection failed", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -227,42 +228,19 @@ public class ProductModel extends JFrame{
 
 
     private ResultSet productPurchaseHistory(String product){
-        ResultSet resultSet = null;
-        String getCustomerQuery = "SELECT c.customer_id, c.last_name, c.first_name, i.unit_price, i.quantity_ordered, s.total_amount" +
-                                    "FROM Customer c JOIN Sales s ON s.customer_id = c.customer_id" +
-                                    "JOIN SalesItems i ON i.sales_id = s.sales_id" +
-                                    "JOIN Product p ON p.product_id = i.product_id" +
-                                    "WHERE product_name = ?";
+     
+        String getCustomerQuery = "SELECT c.customer_id, c.last_name, c.first_name, i.unit_price, i.quantity_ordered, s.total_amount " +
+                                    "FROM Customer c JOIN Sales s ON s.customer_id = c.customer_id " +
+                                    "JOIN SalesItems i ON i.sales_id = s.sales_id " +
+                                    "JOIN Product p ON p.product_id = i.product_id " +
+                                    "WHERE p.product_name = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
-            conn.setAutoCommit(false); // Start transaction
-
-            try (PreparedStatement getCustomerStmt = conn.prepareStatement(getCustomerQuery);){
-
-                getCustomerStmt.setString(1, product);
-                int customerId = -1;
-                try (ResultSet rs = getCustomerStmt.executeQuery()) { 
-                    if (rs.next()) {
-                        customerId = rs.getInt(1); 
-                        resultSet = rs;
-                    }
-                }
-
-                if (customerId == -1) {
-                    JOptionPane.showMessageDialog(this, "Invalid product selected.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return null;
-                }else{
-                    return resultSet;
-                }
-
-            }catch(SQLException e){
-                conn.rollback(); // Rollback on error
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "An error while getting request: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                return null;
-            }
-
-        }catch(SQLException e){
+        try {
+            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            PreparedStatement stmt = conn.prepareStatement(getCustomerQuery);
+            stmt.setString(1, product);
+            return stmt.executeQuery();  // caller must handle closing
+        } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
@@ -272,23 +250,56 @@ public class ProductModel extends JFrame{
     private void displayProcessReturn(){
         JComboBox<String> branchCode  = new JComboBox<>(displayData.getComboBoxData("SELECT branch_code FROM Branch ORDER BY branch_code"));
         JComboBox<String> saleDate  = new JComboBox<>(displayData.getComboBoxData("SELECT sale_date FROM Sales ORDER BY sale_date ASC"));
-       
-        String strSaleDate = (String) saleDate.getSelectedItem();
-        JComboBox<String> returnItem = new JComboBox<>(displayData.getComboBoxData("SELECT p.product_name FROM Products p JOIN SalesItem i ON i.product_id = p.product_id JOIN Sales s ON s.sale_id = i.sale_id WHERE sale_date = "+ strSaleDate));
-            
+        JComboBox<String> customerName = new JComboBox<>();
+        JLabel customerId = new JLabel(" ");
+        JComboBox<String> returnItem = new JComboBox<>();
+    
+        // Initial population
+        updateCustomerNameCombo(customerName, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem());
+
+        String initialName = (String) customerName.getSelectedItem();
+        updateCustomerIdLabel(customerId, initialName);
+
+        updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
+
+
+        // Update customerName and returnItem combos when date or branch is changed
+        ActionListener updateListener = e -> {
+            String selectedDate = (String) saleDate.getSelectedItem();
+            String selectedBranch = (String) branchCode.getSelectedItem();
+            updateCustomerNameCombo(customerName,selectedDate, selectedBranch);
+
+            String updatedName = (String) customerName.getSelectedItem();
+            updateCustomerIdLabel(customerId, updatedName);
+        
+            updateReturnItemsCombo(returnItem, selectedDate, selectedBranch, customerId.getText());
+        };
+
+        saleDate.addActionListener(updateListener);
+        branchCode.addActionListener(updateListener);
+
+        // Update customerId when customerName changes
+        customerName.addActionListener(e -> {
+            String name = (String) customerName.getSelectedItem();
+            updateCustomerIdLabel(customerId, name);
+            updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
+        });
+
+
         JTextField quantityField = new JTextField();
         JTextField reasonField = new JTextField();
 
-        displayData.showProcessReturn(this, branchCode, saleDate, returnItem, quantityField, reasonField, 
+        displayData.showProcessReturn(this, branchCode, saleDate, customerName, customerId, returnItem, quantityField, reasonField, 
             e -> { 
                 try {
                     String strBranchCode = (String) branchCode.getSelectedItem();
+                    String strSaleDate = (String) saleDate.getSelectedItem();
                     String strReturnItem = (String) returnItem.getSelectedItem();
                     String reason = (String) reasonField.getText();
                     int qty = Integer.parseInt(quantityField.getText());
 
                     if(strSaleDate == null){
-                        JOptionPane.showMessageDialog(this, "No items were sold on this date", "Notice", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Missing selections", "Notice", JOptionPane.WARNING_MESSAGE);
                     }
 
                     if(qty <= 0){
@@ -301,22 +312,68 @@ public class ProductModel extends JFrame{
                         productMenu();
                     }
                 }catch (NumberFormatException ex) {
-
+                    JOptionPane.showMessageDialog(null, "Invalid quantity value");
                 }
                 
             }, e -> productMenu());
     }
 
+    // Helper method for return items comboBox update on user selection
+    private void updateCustomerNameCombo(JComboBox<String> customerName, String saleDate, String branchCode){
+        if (saleDate != null && branchCode != null) {
+            String customerNameQuery = "SELECT CONCAT(c.last_name, ' ', c.first_name) AS CustomerName " +
+                                        "FROM Customer c JOIN Sales s ON s.customer_id = c.customer_id " +
+                                        "WHERE s.sale_date = '" + saleDate + "' AND s.branch_code = '" + branchCode + "'";
+
+            String[] customers = displayData.getComboBoxData(customerNameQuery);
+            customerName.setModel(new DefaultComboBoxModel<>(customers));
+        }else { 
+            customerName.setModel(new DefaultComboBoxModel<>());
+        }
+    }
+
+
+    // Helper method to update customer ID label
+    private void updateCustomerIdLabel(JLabel customerIdLabel, String fullName) {
+        if (fullName != null && !fullName.isEmpty()) {
+            try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer WHERE CONCAT(first_name, ' ', last_name) = '" + fullName + "'")) {
+                if (rs.next()) {
+                    customerIdLabel.setText(rs.getString("customer_id"));
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            customerIdLabel.setText("");
+        }
+    }
+
+    // Helper method for return items comboBox update on user selection
+    private void updateReturnItemsCombo(JComboBox<String> returnItem, String saleDate, String branchCode, String customerId) {
+        if (saleDate != null && branchCode != null) {
+            String query = "SELECT DISTINCT p.product_name FROM Product p " +
+                           "JOIN SalesItems i ON i.product_id = p.product_id " +
+                           "JOIN Sales s ON s.sales_id = i.sales_id " +
+                           "WHERE s.sale_date = '" + saleDate + "' AND s.branch_code = '" + 
+                           branchCode + "' AND s.customer_id = '" + customerId + "'";
+
+            String[] items = displayData.getComboBoxData(query);
+            returnItem.setModel(new DefaultComboBoxModel<>(items));
+        } else {
+            returnItem.setModel(new DefaultComboBoxModel<>());
+        }
+    }
+    
 
     private boolean processReturn(String branchCode, String saleDate, String productName, String reason, int quantity){
-        String getSaleIdQuery = "SELECT s.sale_id FROM Sales s JOIN SaleItems i ON i.sale_id = s.sale_id WHERE sale_date = ? AND product_id = ? AND branch_code = ?";
-        String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
-        String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sale_id = ? AND product_id = ?";
-        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sale_id = ? AND sale_date = ? and branch_code = ?";
-        String deleteSalesQuery = "DELETE FROM Sales s JOIN SaleItems i ON i.sale_id = s.sale_id WHERE s.sale_id = ? AND s.sale_date = ? AND i.product_id = ?";
-        String updateSalesItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sale_id = ? AND product_id = ?";
-        String deleteSalesItemsQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
-        String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?, ?)";
+        String getSaleIdQuery = "SELECT s.sales_id FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE sale_date = ? AND product_id = ? AND branch_code = ?";
+        String getProductIdQuery = "SELECT product_id FROM Product WHERE product_name = ?";
+        String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sales_id = ? AND product_id = ?";
+        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sales_id = ? AND sale_date = ? and branch_code = ?";
+        String deleteSalesQuery = "DELETE s FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE s.sales_id = ? AND s.sale_date = ? AND i.product_id = ?";
+        String updateSalesItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sales_id = ? AND product_id = ?";
+        String deleteSalesItemsQuery = "DELETE FROM SalesItems WHERE sales_id = ? AND product_id = ?";
+        String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?)";
         String updateReturnItemsQuery = "INSERT INTO ReturnItems VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + ?";
 
 
@@ -330,7 +387,7 @@ public class ProductModel extends JFrame{
                 int productId = -1;
                 try (ResultSet rs = getProductIdStmt.executeQuery()) { 
                     if (rs.next()) {
-                        productId = rs.getInt(1);
+                        productId = rs.getInt("product_id");
                     }
                 }
 
@@ -340,7 +397,7 @@ public class ProductModel extends JFrame{
                 int saleId = -1;
                 try (ResultSet rs = getSaleIdStmt.executeQuery()) {
                     if (rs.next()){
-                        saleId = rs.getInt(1);
+                        saleId = rs.getInt("sales_id");
                     }
                 }
 
@@ -356,8 +413,14 @@ public class ProductModel extends JFrame{
                     checkQuantityStmt.setInt(1, saleId);
                     checkQuantityStmt.setInt(2, productId);
                     try (ResultSet rs = checkQuantityStmt.executeQuery()) {
-                        quantity_ordered =  rs.getInt("quantity_ordered");
-                        if (!rs.next() || quantity_ordered < quantity) {
+                        if (!rs.next()) {
+                            JOptionPane.showMessageDialog(this, "Sale item not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                            conn.rollback();
+                            return false;
+                        }
+                        quantity_ordered = rs.getInt("quantity_ordered");
+                    
+                        if (quantity_ordered < quantity) {
                             JOptionPane.showMessageDialog(this, "You cannot return more than the ordered quantity of " + quantity_ordered, "Error", JOptionPane.ERROR_MESSAGE);
                             conn.rollback();
                             return false;
@@ -374,23 +437,26 @@ public class ProductModel extends JFrame{
                      PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
                      PreparedStatement updateReturnItemsStmt = conn.prepareStatement(updateReturnItemsQuery)) {
 
-                    String unitPrice = "Select unit_price FROM SaleItems WHERE sale_id = " + saleId + "AND product_id = " + productId;
+                    String unitPrice = "Select unit_price FROM SalesItems WHERE sales_id = '" + saleId + "'" + " AND product_id = '" + productId + "'";
                     String strReturnId = "SELECT * FROM Returns ORDER BY return_id DESC LIMIT 1;";
                     String strReturnItemId = "SELECT * FROM ReturnItems ORDER BY return_item_id DESC LIMIT 1;";
 
                     LocalDate today = LocalDate.now();
-                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-mm-dd"));
+                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-                    double returnedPrice;
-                    int returnId, returnItemId;
+                    double returnedPrice = -1;
+                    int returnId = -1;
+                    int returnItemId = -1;
             
                     try(ResultSet rsPrice = executeQuery(unitPrice);
                         ResultSet rsReturnId = executeQuery(strReturnId);
                         ResultSet rsReturnItemId = executeQuery(strReturnItemId)){
-
-                        returnedPrice = rsPrice.getDouble("total_amount") * quantity;
-                        returnId = rsReturnId.getInt("return_id");
-                        returnItemId = rsReturnItemId.getInt("return_item_id");
+                        
+                        if (rsPrice.next() && rsReturnId.next() && rsReturnItemId.next()) {
+                            returnedPrice = rsPrice.getDouble("unit_price") * quantity;
+                            returnId = rsReturnId.getInt("return_id") + 1;
+                            returnItemId = rsReturnItemId.getInt("return_item_id") + 1;
+                        } 
 
                         if (quantity < quantity_ordered && quantity > 0){
 
@@ -405,17 +471,16 @@ public class ProductModel extends JFrame{
                             updateSalesItemsStmt.setInt(3, productId);
                             updateSalesItemsStmt.executeUpdate();
                     
-                            updateReturnsStmt.setInt(1, returnId + 1);
-                            updateReturnsStmt.setInt(2, saleId);
-                            updateReturnsStmt.setString(3, dateStr);
-                            updateReturnsStmt.setString(4, reason);
+                            updateReturnsStmt.setInt(1, returnId);
+                            updateReturnsStmt.setString(2, dateStr);
+                            updateReturnsStmt.setString(3, reason);
                             updateReturnsStmt.executeUpdate();
                             
-                            updateReturnItemsStmt.setInt(1, returnItemId + 1);
+                            updateReturnItemsStmt.setInt(1, returnItemId);
                             updateReturnItemsStmt.setInt(2, returnId);
                             updateReturnItemsStmt.setInt(3, productId);
                             updateReturnItemsStmt.setInt(4, quantity);
-                            updateReturnItemsStmt.setInt(1, quantity);
+                            updateReturnItemsStmt.setInt(5, quantity);
                             updateReturnItemsStmt.executeUpdate();
                             
                             conn.commit(); // Commit transaction
@@ -432,16 +497,15 @@ public class ProductModel extends JFrame{
                             deleteSalesItemsStmt.executeUpdate();
 
                             updateReturnsStmt.setInt(1, returnId + 1);
-                            updateReturnsStmt.setInt(2, saleId);
-                            updateReturnsStmt.setString(3, dateStr);
-                            updateReturnsStmt.setString(4, reason);
+                            updateReturnsStmt.setString(2, dateStr);
+                            updateReturnsStmt.setString(3, reason);
                             updateReturnsStmt.executeUpdate();
                             
                             updateReturnItemsStmt.setInt(1, returnItemId + 1);
                             updateReturnItemsStmt.setInt(2, returnId);
                             updateReturnItemsStmt.setInt(3, productId);
                             updateReturnItemsStmt.setInt(4, quantity);
-                            updateReturnItemsStmt.setInt(1, quantity);
+                            updateReturnItemsStmt.setInt(5, quantity);
                             updateReturnItemsStmt.executeUpdate();
 
                             conn.commit(); // Commit transaction
@@ -470,43 +534,52 @@ public class ProductModel extends JFrame{
         JComboBox<String> supplier = new JComboBox<>(displayData.getComboBoxData("SELECT supplier_name FROM Supplier ORDER BY supplier_name")); 
         JTextField quantityField = new JTextField();
         JLabel costLabel = new JLabel("₱0.00");  
-
-        String product = (String) productName.getSelectedItem();
-        String unitPriceQuery = "SELECT unit_price FROM Product WHERE product_name = " + product;
-
         
-        double unitPrice;
-        try(ResultSet rs = executeQuery(unitPriceQuery)){
-            unitPrice = rs.getDouble("unit_price");
         
-            quantityField.getDocument().addDocumentListener(new DocumentListener() {
-                public void insertUpdate(DocumentEvent e) { updateCost(); }
-                public void removeUpdate(DocumentEvent e) { updateCost(); }
-                public void changedUpdate(DocumentEvent e) { updateCost(); }
-            
-                private void updateCost() {
-                    try {
-                        
-                        int quantity = Integer.parseInt(quantityField.getText());
-                        double cost = unitPrice * 0.7 * quantity;
-                        costLabel.setText(String.format("₱%.2f", cost));
-                    } catch (NumberFormatException ex) {
-                        costLabel.setText("₱0.00"); // Reset or show error if input is invalid
-                        JOptionPane.showMessageDialog(null, "Invalid quantity");
+        quantityField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { updateCost(); }
+            public void removeUpdate(DocumentEvent e) { updateCost(); }
+            public void changedUpdate(DocumentEvent e) { updateCost(); }
+        
+            private void updateCost() {
+                try {
+                    String product = (String) productName.getSelectedItem();
+                    String unitPriceQuery = "SELECT unit_price FROM Product WHERE product_name = '" + product + "'";
+                    
+                    double unitPrice = 0;
+                    try (ResultSet rs = executeQuery(unitPriceQuery)) {
+                        if (rs.next()) {
+                            unitPrice = rs.getDouble("unit_price");
+                        }
                     }
+
+                    int quantity = Integer.parseInt(quantityField.getText());
+                    double cost = unitPrice * 0.7 * quantity;
+                    costLabel.setText(String.format("₱%.2f", cost));
+                } catch (NumberFormatException ex) {
+                    costLabel.setText("₱0.00"); // Reset or show error if input is invalid
+                }catch (SQLException e) {
+                    e.printStackTrace();
                 }
-            });
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            }
+        });
+
+        productName.addActionListener(e -> {
+            // Force the cost to update when product changes
+            quantityField.postActionEvent();
+        });
 
         displayData.showRestockProducts(this, branchName, productName, supplier, quantityField, costLabel, e -> {
                 
-                try {
+                try { 
+                    
                     String branch = (String) branchName.getSelectedItem();
+                    String product = (String) productName.getSelectedItem();
                     String strSupplier = (String) supplier.getSelectedItem();
                     int quantity = Integer.parseInt(quantityField.getText());
-                    double cost = Double.parseDouble(costLabel.getText());
+
+                    String strCost= costLabel.getText();
+                    double cost = Double.parseDouble(strCost.substring(1));
 
                     if(restockProduct(branch, product, strSupplier, quantity, cost)){
                         JOptionPane.showMessageDialog(this, "Product restocked successfully!");
@@ -521,7 +594,7 @@ public class ProductModel extends JFrame{
 
     private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost){
         String getBranchIdQuery = "SELECT branch_code FROM branch WHERE branch_name = ?";
-        String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
+        String getProductIdQuery = "SELECT product_id FROM product WHERE product_name = ?";
         String getSupplierIdQuery = "SELECT supplier_id FROM Supplier WHERE supplier_name = ?";
         String updateInventoryQuery = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
         String updateRestockQuery = "INSERT INTO Restock VALUES (?, ?, ?, ?, ?, ?)";
@@ -567,11 +640,15 @@ public class ProductModel extends JFrame{
 
                     String strRestockId = "SELECT * FROM Restock ORDER BY restock_id DESC LIMIT 1;";
                      
-                    ResultSet rs = executeQuery(strRestockId);
-                    int restockId = rs.getInt("restock_id");
+                    int restockId = -1;
+                    try(ResultSet rs = executeQuery(strRestockId)){
+                        if(rs.next()){
+                            restockId = rs.getInt("restock_id") + 1;
+                        }
+                    }
 
                     LocalDate today = LocalDate.now();
-                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-mm-dd"));
+                    String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
                     updateInventoryStmt.setInt(1, quantity);
                     updateInventoryStmt.setString(2, branchId);
