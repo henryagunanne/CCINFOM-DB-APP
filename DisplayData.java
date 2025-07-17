@@ -3,8 +3,12 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.sql.*;
 
+import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.layout.*;
+import com.itextpdf.layout.element.Paragraph;
 /*import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -283,6 +287,51 @@ public class DisplayData {
         parent.getContentPane().add(panel);
         parent.revalidate();
         parent.repaint();
+    }
+
+
+    public void generateReciept(JFrame parent, String receiptContent) {
+         // Show the receipt preview first
+        JTextArea textArea = new JTextArea(receiptContent);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 400));
+
+        int result = JOptionPane.showConfirmDialog(
+            parent,
+            scrollPane,
+            "Receipt Preview - Save as PDF?",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.YES_OPTION) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Receipt as PDF");
+
+            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                if (!file.getName().toLowerCase().endsWith(".pdf")) {
+                    file = new File(file.getAbsolutePath() + ".pdf");
+                }
+
+                try {
+                    PdfWriter writer = new PdfWriter(file);
+                    PdfDocument pdfDoc = new PdfDocument(writer);
+                    Document document = new Document(pdfDoc);
+
+                    for (String line : receiptContent.split("\\n")) {
+                        document.add(new Paragraph(line));
+                    }
+
+                    document.close();
+                    JOptionPane.showMessageDialog(parent, "PDF saved successfully.");
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(parent, "Error saving PDF: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 }
 

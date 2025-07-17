@@ -374,11 +374,7 @@ public class ProductModel extends JFrame{
         String getSaleIdQuery = "SELECT s.sales_id FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE sale_date = ? AND product_id = ? AND branch_code = ?";
         String getProductIdQuery = "SELECT product_id FROM Product WHERE product_name = ?";
         String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sales_id = ? AND product_id = ?";
-        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sales_id = ? AND sale_date = ? and branch_code = ?";
-        String deleteSalesQuery = "DELETE s FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE s.sales_id = ? AND s.sale_date = ? AND i.product_id = ?";
-        String updateSalesItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sales_id = ? AND product_id = ?";
-        String deleteSalesItemsQuery = "DELETE FROM SalesItems WHERE sales_id = ? AND product_id = ?";
-        String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?)";
+        String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?, ?)";
         String updateReturnItemsQuery = "INSERT INTO ReturnItems VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + ?";
 
 
@@ -435,87 +431,41 @@ public class ProductModel extends JFrame{
 
 
                 // update tables
-                try (PreparedStatement updateSalesStmt = conn.prepareStatement(updateSalesQuery);
-                     PreparedStatement deleteSalesStmt = conn.prepareStatement(deleteSalesQuery);
-                     PreparedStatement updateSalesItemsStmt = conn.prepareStatement(updateSalesItemsQuery);
-                     PreparedStatement deleteSalesItemsStmt = conn.prepareStatement(deleteSalesItemsQuery);
-                     PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
+                try (PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
                      PreparedStatement updateReturnItemsStmt = conn.prepareStatement(updateReturnItemsQuery)) {
 
-                    String unitPrice = "Select unit_price FROM SalesItems WHERE sales_id = '" + saleId + "'" + " AND product_id = '" + productId + "'";
                     String strReturnId = "SELECT * FROM Returns ORDER BY return_id DESC LIMIT 1;";
                     String strReturnItemId = "SELECT * FROM ReturnItems ORDER BY return_item_id DESC LIMIT 1;";
 
                     LocalDate today = LocalDate.now();
                     String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-                    double returnedPrice = -1;
                     int returnId = -1;
                     int returnItemId = -1;
             
-                    try(ResultSet rsPrice = executeQuery(unitPrice);
-                        ResultSet rsReturnId = executeQuery(strReturnId);
+                    try(ResultSet rsReturnId = executeQuery(strReturnId);
                         ResultSet rsReturnItemId = executeQuery(strReturnItemId)){
                         
-                        if (rsPrice.next() && rsReturnId.next() && rsReturnItemId.next()) {
-                            returnedPrice = rsPrice.getDouble("unit_price") * quantity;
-                            returnId = rsReturnId.getInt("return_id") + 1;
-                            returnItemId = rsReturnItemId.getInt("return_item_id") + 1;
+                        if (rsReturnId.next() && rsReturnItemId.next()) {
+                            returnId = rsReturnId.getInt("return_id");
+                            returnItemId = rsReturnItemId.getInt("return_item_id");
                         } 
-
-                        if (quantity < quantity_ordered && quantity > 0){
-
-                            updateSalesStmt.setDouble(1, returnedPrice);
-                            updateSalesStmt.setInt(2, saleId);
-                            updateSalesStmt.setString(3, saleDate);
-                            updateSalesStmt.setString(4, branchCode);
-                            updateSalesStmt.executeUpdate();
-
-                            updateSalesItemsStmt.setInt(1, quantity);
-                            updateSalesItemsStmt.setInt(2, saleId);
-                            updateSalesItemsStmt.setInt(3, productId);
-                            updateSalesItemsStmt.executeUpdate();
                     
-                            updateReturnsStmt.setInt(1, returnId);
-                            updateReturnsStmt.setString(2, dateStr);
-                            updateReturnsStmt.setString(3, reason);
-                            updateReturnsStmt.executeUpdate();
-                            
-                            updateReturnItemsStmt.setInt(1, returnItemId);
-                            updateReturnItemsStmt.setInt(2, returnId);
-                            updateReturnItemsStmt.setInt(3, productId);
-                            updateReturnItemsStmt.setInt(4, quantity);
-                            updateReturnItemsStmt.setInt(5, quantity);
-                            updateReturnItemsStmt.executeUpdate();
-                            
-                            conn.commit(); // Commit transaction
-                            return true;
-
-                        }else if (quantity_ordered == quantity){
-                            deleteSalesStmt.setInt(1, saleId);
-                            deleteSalesStmt.setString(2, saleDate);
-                            deleteSalesStmt.setInt(3, productId);
-                            deleteSalesStmt.executeUpdate();
-    
-                            deleteSalesItemsStmt.setInt(1, saleId);
-                            deleteSalesItemsStmt.setInt(2, productId);
-                            deleteSalesItemsStmt.executeUpdate();
-
-                            updateReturnsStmt.setInt(1, returnId + 1);
-                            updateReturnsStmt.setString(2, dateStr);
-                            updateReturnsStmt.setString(3, reason);
-                            updateReturnsStmt.executeUpdate();
-                            
-                            updateReturnItemsStmt.setInt(1, returnItemId + 1);
-                            updateReturnItemsStmt.setInt(2, returnId);
-                            updateReturnItemsStmt.setInt(3, productId);
-                            updateReturnItemsStmt.setInt(4, quantity);
-                            updateReturnItemsStmt.setInt(5, quantity);
-                            updateReturnItemsStmt.executeUpdate();
-
-                            conn.commit(); // Commit transaction
-                            return true;
-                        }
+                        updateReturnsStmt.setInt(1, returnId + 1);
+                        updateReturnsStmt.setInt(2, saleId);
+                        updateReturnsStmt.setString(3, dateStr);
+                        updateReturnsStmt.setString(4, reason);
+                        updateReturnsStmt.executeUpdate();
+                        
+                        updateReturnItemsStmt.setInt(1, returnItemId + 1);
+                        updateReturnItemsStmt.setInt(2, returnId + 1);
+                        updateReturnItemsStmt.setInt(3, productId);
+                        updateReturnItemsStmt.setInt(4, quantity);
+                        updateReturnItemsStmt.setInt(5, quantity);
+                        updateReturnItemsStmt.executeUpdate();
+                        
+                        conn.commit(); // Commit transaction
+                        return true;
                     }
                 }
             }catch (SQLException e) {
@@ -681,6 +631,96 @@ public class ProductModel extends JFrame{
         }catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+
+
+    private void generateAndSaveReturnReceipt(int returnId) {
+        StringBuilder receipt = new StringBuilder();
+    
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            String returnQuery = "SELECT r.return_date, r.reason, s.sales_date, b.branch_name, c.first_name, c.last_name " +
+                                 "FROM Returns r " +
+                                 "JOIN Sales s ON r.sales_id = s.sales_id " +
+                                 "JOIN Customer c ON s.customer_id = c.customer_id " +
+                                 "JOIN Branch b ON s.branch_code = b.branch_code " +
+                                 "WHERE r.return_id = ?";
+    
+            String itemsQuery = "SELECT p.product_name, ri.quantity_returned " +
+                                "FROM ReturnItems ri " +
+                                "JOIN Product p ON ri.product_id = p.product_id " +
+                                "WHERE ri.return_id = ?";
+    
+            PreparedStatement returnStmt = conn.prepareStatement(returnQuery);
+            returnStmt.setInt(1, returnId);
+            ResultSet rs = returnStmt.executeQuery();
+    
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(this, "Return not found.");
+                return;
+            }
+    
+            // Header info
+            String returnDate = rs.getString("return_date");
+            String reason = rs.getString("reason");
+            String saleDate = rs.getString("sale_date");
+            String customer = rs.getString("first_name") + " " + rs.getString("last_name");
+            String branch = rs.getString("branch_name");
+    
+            receipt.append("        RETURN RECEIPT\n");
+            receipt.append("-------------------------------\n");
+            receipt.append("Return Date: ").append(returnDate).append("\n");
+            receipt.append("Original Sale: ").append(saleDate).append("\n");
+            receipt.append("Customer: ").append(customer).append("\n");
+            receipt.append("Branch: ").append(branch).append("\n");
+            receipt.append("Reason: ").append(reason).append("\n");
+            receipt.append("-------------------------------\n");
+            receipt.append("Item                     Qty\n");
+    
+            PreparedStatement itemsStmt = conn.prepareStatement(itemsQuery);
+            itemsStmt.setInt(1, returnId);
+            ResultSet itemRs = itemsStmt.executeQuery();
+    
+            while (itemRs.next()) {
+                String name = itemRs.getString("product_name");
+                int qty = itemRs.getInt("quantity_returned");
+    
+                receipt.append(String.format("%-24s %4d\n", name, qty));
+            }
+    
+            receipt.append("-------------------------------\n");
+            receipt.append("Thank you. We have received the returned item(s).\n");
+    
+            // Show preview
+            JTextArea previewArea = new JTextArea(receipt.toString());
+            previewArea.setEditable(false);
+            previewArea.setFont(new java.awt.Font("Monospaced", Font.PLAIN, 14));
+            JScrollPane scroll = new JScrollPane(previewArea);
+            scroll.setPreferredSize(new java.awt.Dimension(400, 300));
+    
+            int option = JOptionPane.showConfirmDialog(this, scroll, "Return Receipt Preview", JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
+                // Save as PDF
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Save Return Receipt As PDF");
+                fileChooser.setSelectedFile(new File("return_receipt_" + returnId + ".pdf"));
+    
+                if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    try (PdfWriter writer = new PdfWriter(new FileOutputStream(file));
+                         PdfDocument pdf = new PdfDocument(writer);
+                         Document doc = new Document(pdf)) {
+    
+                        doc.add(new Paragraph(receipt.toString()));
+                        JOptionPane.showMessageDialog(this, "Return receipt saved successfully!");
+                    }
+                }
+            }
+    
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to generate return receipt: " + e.getMessage());
         }
     }
 }
