@@ -6,3 +6,6 @@ AnimalShelter.mwb
 ProductModel$1.class
 ProductModel.class
 MainMenuGUI.class
+SalesTransactionModel$SaleItem.class
+SalesTransactionModel.class
+SalesRepModel.class
