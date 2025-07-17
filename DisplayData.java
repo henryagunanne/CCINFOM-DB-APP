@@ -162,7 +162,7 @@ public class DisplayData {
 
 
     public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
-                                 JComboBox<String> customerName, JLabel customerId, JComboBox<String> returnItem,
+                                 JComboBox<String> customerName, JComboBox<String> returnItem,
                                  JTextField quantityField, JTextField reasonField, ActionListener submitAction, 
                                  ActionListener backAction){
 
@@ -186,18 +186,16 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch code:"), gbc);
         gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date: "), gbc);
         gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Customer Name: "), gbc);
-        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Customer ID: "), gbc);
-        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Item to return:"), gbc);
-        gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Quantity to return :"), gbc);
-        gbc.gridx = 0; gbc.gridy = 7; panel.add(new JLabel("Reason :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Item to return:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Quantity to return :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Reason :"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(branchCode, gbc);
         gbc.gridx = 1; gbc.gridy = 2; panel.add(saleDate, gbc);
         gbc.gridx = 1; gbc.gridy = 3; panel.add(customerName, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; panel.add(customerId, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; panel.add(returnItem, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; panel.add(quantityField, gbc);
-        gbc.gridx = 1; gbc.gridy = 7; panel.add(reasonField, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(returnItem, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; panel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 6; panel.add(reasonField, gbc);
 
         JPanel buttonPanel = new JPanel();
         JButton submitBtn = new JButton("Submit Return");
@@ -218,7 +216,7 @@ public class DisplayData {
         buttonPanel.add(submitBtn);
         buttonPanel.add(backBtn);
 
-        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
         parent.getContentPane().add(panel);

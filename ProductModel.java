@@ -251,16 +251,17 @@ public class ProductModel extends JFrame{
         JComboBox<String> branchCode  = new JComboBox<>(displayData.getComboBoxData("SELECT branch_code FROM Branch ORDER BY branch_code"));
         JComboBox<String> saleDate  = new JComboBox<>(displayData.getComboBoxData("SELECT sale_date FROM Sales ORDER BY sale_date ASC"));
         JComboBox<String> customerName = new JComboBox<>();
-        JLabel customerId = new JLabel(" ");
+        //JLabel customerId = new JLabel(" ");
         JComboBox<String> returnItem = new JComboBox<>();
     
         // Initial population
         updateCustomerNameCombo(customerName, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem());
 
         String initialName = (String) customerName.getSelectedItem();
-        updateCustomerIdLabel(customerId, initialName);
+        //updateCustomerIdLabel(customerId, initialName);
 
-        updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
+        String customerId = getCustomerId(initialName);
+        updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId);
 
 
         // Update customerName and returnItem combos when date or branch is changed
@@ -270,26 +271,28 @@ public class ProductModel extends JFrame{
             updateCustomerNameCombo(customerName,selectedDate, selectedBranch);
 
             String updatedName = (String) customerName.getSelectedItem();
-            updateCustomerIdLabel(customerId, updatedName);
-        
-            updateReturnItemsCombo(returnItem, selectedDate, selectedBranch, customerId.getText());
+            //updateCustomerIdLabel(customerId, updatedName);
+            String id = getCustomerId(updatedName);
+            updateReturnItemsCombo(returnItem, selectedDate, selectedBranch, id);
         };
 
         saleDate.addActionListener(updateListener);
         branchCode.addActionListener(updateListener);
 
+       
         // Update customerId when customerName changes
         customerName.addActionListener(e -> {
             String name = (String) customerName.getSelectedItem();
-            updateCustomerIdLabel(customerId, name);
-            updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
+            if (name != null) {
+                String id = getCustomerId(name);
+                updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), id);
+            }
         });
-
 
         JTextField quantityField = new JTextField();
         JTextField reasonField = new JTextField();
 
-        displayData.showProcessReturn(this, branchCode, saleDate, customerName, customerId, returnItem, quantityField, reasonField, 
+        displayData.showProcessReturn(this, branchCode, saleDate, customerName, returnItem, quantityField, reasonField, 
             e -> { 
                 try {
                     String strBranchCode = (String) branchCode.getSelectedItem();
@@ -333,20 +336,21 @@ public class ProductModel extends JFrame{
     }
 
 
-    // Helper method to update customer ID label
-    private void updateCustomerIdLabel(JLabel customerIdLabel, String fullName) {
+    // Helper method to get customer ID
+    private String getCustomerId(String fullName) {
+        String customerId = null;
         if (fullName != null && !fullName.isEmpty()) {
             try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer WHERE CONCAT(first_name, ' ', last_name) = '" + fullName + "'")) {
                 if (rs.next()) {
-                    customerIdLabel.setText(rs.getString("customer_id"));
+                    customerId = rs.getString("customer_id");
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-        } else {
-            customerIdLabel.setText("");
         }
+        return customerId;
     }
+
 
     // Helper method for return items comboBox update on user selection
     private void updateReturnItemsCombo(JComboBox<String> returnItem, String saleDate, String branchCode, String customerId) {
