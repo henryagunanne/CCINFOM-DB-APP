@@ -34,7 +34,7 @@ public class BranchModel extends JFrame {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
+    final private String PASSWORD = "imagentumr1@";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
@@ -138,9 +138,9 @@ public class BranchModel extends JFrame {
     }
 
     private void showStockTransfer() {
-        sourceBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
-        destBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM branch ORDER BY branch_name"));
-        productBox = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM product ORDER BY product_name"));
+        sourceBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM Branch ORDER BY branch_name"));
+        destBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM Branch ORDER BY branch_name"));
+        productBox = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM Product ORDER BY product_name"));
         quantityField = new JTextField();
         
         displayData.showStockTransfer(this, sourceBranch, destBranch, productBox, quantityField,
@@ -172,15 +172,15 @@ public class BranchModel extends JFrame {
     }
 
     private ResultSet getBranchResultSet() {
-        return executeQuery("SELECT * FROM branch");
+        return executeQuery("SELECT * FROM Branch");
     }
 
     private ResultSet BranchAndActiveSalesRep() {
         return executeQuery("SELECT b.branch_name AS BranchName, b.location AS Location, " +
                 "s.name AS SalesRep, s.active_status AS ActiveStatus, " +
                 "b.contact_number AS ContactBranch " +
-                "FROM branch b " +
-                "LEFT JOIN salesrep s ON b.branch_code = s.branch_code AND s.active_status = 'TRUE' " +
+                "FROM Branch b " +
+                "LEFT JOIN SalesRep s ON b.branch_code = s.branch_code AND s.active_status = 'TRUE' " +
                 "ORDER BY s.name");
     }
 
@@ -197,8 +197,8 @@ public class BranchModel extends JFrame {
     
 
     private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
-        String getBranchIdQuery = "SELECT branch_code FROM branch WHERE branch_name = ?";
-        String getProductIdQuery = "SELECT product_id FROM product WHERE name = ?";
+        String getBranchIdQuery = "SELECT branch_code FROM Branch WHERE branch_name = ?";
+        String getProductIdQuery = "SELECT product_id FROM Product WHERE product_name = ?";
         String checkStockQuery = "SELECT quantity FROM Inventory WHERE branch_code = ? AND product_id = ?";
         String updateSourceQuery = "UPDATE Inventory SET quantity = quantity - ? WHERE branch_code = ? AND product_id = ?";
         String updateDestQuery = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?";
@@ -211,25 +211,25 @@ public class BranchModel extends JFrame {
                  PreparedStatement getProdIdStmt = conn.prepareStatement(getProductIdQuery)) {
 
                 getSourceIdStmt.setString(1, sourceBranchName);
-                int sourceBranchId = -1;
-                try (ResultSet rs = getSourceIdStmt.executeQuery()) { if (rs.next()) sourceBranchId = rs.getInt(1); }
+                String sourceBranchId = null;
+                try (ResultSet rs = getSourceIdStmt.executeQuery()) { if (rs.next()) sourceBranchId = rs.getString(1); }
 
                 getDestIdStmt.setString(1, destBranchName);
-                int destBranchId = -1;
-                try (ResultSet rs = getDestIdStmt.executeQuery()) { if (rs.next()) destBranchId = rs.getInt(1); }
+                String destBranchId = null;
+                try (ResultSet rs = getDestIdStmt.executeQuery()) { if (rs.next()) destBranchId = rs.getString(1); }
 
                 getProdIdStmt.setString(1, productName);
                 int productId = -1;
                 try (ResultSet rs = getProdIdStmt.executeQuery()) { if (rs.next()) productId = rs.getInt(1); }
 
-                if (sourceBranchId == -1 || destBranchId == -1 || productId == -1) {
+                if (sourceBranchId == null || destBranchId == null || productId == -1) {
                     JOptionPane.showMessageDialog(this, "Invalid branch or product selected.", "Error", JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
                 // Check stock
                 try (PreparedStatement checkStockStmt = conn.prepareStatement(checkStockQuery)) {
-                    checkStockStmt.setInt(1, sourceBranchId);
+                    checkStockStmt.setString(1, sourceBranchId);
                     checkStockStmt.setInt(2, productId);
                     try (ResultSet rs = checkStockStmt.executeQuery()) {
                         if (!rs.next() || rs.getInt("quantity") < quantity) {
@@ -245,11 +245,11 @@ public class BranchModel extends JFrame {
                      PreparedStatement updateDestStmt = conn.prepareStatement(updateDestQuery)) {
 
                     updateSourceStmt.setInt(1, quantity);
-                    updateSourceStmt.setInt(2, sourceBranchId);
+                    updateSourceStmt.setString(2, sourceBranchId);
                     updateSourceStmt.setInt(3, productId);
                     updateSourceStmt.executeUpdate();
 
-                    updateDestStmt.setInt(1, destBranchId);
+                    updateDestStmt.setString(1, destBranchId);
                     updateDestStmt.setInt(2, productId);
                     updateDestStmt.setInt(3, quantity);
                     updateDestStmt.setInt(4, quantity);
