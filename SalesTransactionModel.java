@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +30,7 @@ public class SalesTransactionModel extends JFrame {
     private JTable itemsTable;
     private JComboBox<String> paymentCombo;
     private JLabel totalLabel;
+    private JButton nextButtonProducts;
 
     public SalesTransactionModel() {
         try {
@@ -70,26 +71,34 @@ public class SalesTransactionModel extends JFrame {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel centerPanel = new JPanel(new GridLayout(3, 1, 10, 10));
         centerPanel.setBackground(Color.WHITE);
         
+        // Customer selection row
+        JPanel customerRow = new JPanel(new BorderLayout());
         customerCombo = new JComboBox<>(new DisplayData().getComboBoxData(
             "SELECT CONCAT(customer_id, ' - ', first_name, ' ', last_name) FROM customer"
         ));
         customerCombo.setFont(new Font("Arial", Font.PLAIN, 18));
+        customerRow.add(new JLabel("Customer:"), BorderLayout.WEST);
+        customerRow.add(customerCombo, BorderLayout.CENTER);
         
-        centerPanel.add(new JLabel("Customer:"));
-        centerPanel.add(customerCombo);
+        JButton newCustomerBtn = new JButton("New Customer");
+        newCustomerBtn.setFont(new Font("Arial", Font.PLAIN, 14));
+        newCustomerBtn.addActionListener(e -> showNewCustomerDialog());
+        customerRow.add(newCustomerBtn, BorderLayout.EAST);
+        centerPanel.add(customerRow);
+
+        // member status row
+        JPanel memberRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         centerPanel.add(new JLabel("Is Member?"));
-        
         JCheckBox memberCheck = new JCheckBox("Member");
         memberCheck.setFont(new Font("Arial", Font.PLAIN, 18));
         memberCheck.setEnabled(false);
-        centerPanel.add(memberCheck);
+        memberRow.add(memberCheck);
+        centerPanel.add(memberRow);
         
-        panel.add(centerPanel, BorderLayout.CENTER);
-
-        // check if member
+        // check member status
         customerCombo.addActionListener(e -> {
             String selected = (String) customerCombo.getSelectedItem();
             if (selected != null) {
@@ -98,16 +107,109 @@ public class SalesTransactionModel extends JFrame {
             }
         });
 
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // button w back and next
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.setBackground(Color.WHITE);
+        
+        JButton backButton = new JButton("Back to Main Menu");
+        backButton.setFont(new Font("Arial", Font.PLAIN, 18));
+        backButton.addActionListener(e -> {
+            dispose();
+            new MainMenuGUI().setVisible(true);
+        });
+        buttonPanel.add(backButton, BorderLayout.WEST);
+        
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
+        buttonPanel.add(nextButton, BorderLayout.EAST);
         
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(nextButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+    
+    private void showNewCustomerDialog() {
+        JDialog dialog = new JDialog(this, "New Customer", true);
+        dialog.setLayout(new GridLayout(6, 2, 10, 10));
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+
+        JTextField firstNameField = new JTextField();
+        JTextField lastNameField = new JTextField();
+        JTextField contactField = new JTextField();
+        JTextField emailField = new JTextField();
+        JTextField addressField = new JTextField();
+
+        dialog.add(new JLabel("First Name*:"));
+        dialog.add(firstNameField);
+        dialog.add(new JLabel("Last Name*:"));
+        dialog.add(lastNameField);
+        dialog.add(new JLabel("Contact*:"));
+        dialog.add(contactField);
+        dialog.add(new JLabel("Email:"));
+        dialog.add(emailField);
+        dialog.add(new JLabel("Address:"));
+        dialog.add(addressField);
+
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(e -> {
+            String firstName = firstNameField.getText().trim();
+            String lastName = lastNameField.getText().trim();
+            String contact = contactField.getText().trim();
+            String email = emailField.getText().trim();
+            String address = addressField.getText().trim();
+
+            if (firstName.isEmpty() || lastName.isEmpty() || contact.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Contact are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (saveNewCustomer(firstName, lastName, contact, email, address)) {
+                updateCustomerCombo();
+                dialog.dispose();
+            }
+        });
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        dialog.add(new JLabel(""));
+        dialog.add(buttonPanel);
+
+        dialog.setVisible(true);
+    }
+    
+    private boolean saveNewCustomer(String firstName, String lastName, String contact, String email, String address) {
+        String sql = "INSERT INTO customer (first_name, last_name, contact_number, email, address) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, contact);
+            stmt.setString(4, email);
+            stmt.setString(5, address);
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error saving customer: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+    
+    private void updateCustomerCombo() {
+        customerCombo.removeAllItems();
+        String[] customers = new DisplayData().getComboBoxData(
+            "SELECT CONCAT(customer_id, ' - ', first_name, ' ', last_name) FROM customer"
+        );
+        for (String customer : customers) {
+            customerCombo.addItem(customer);
+        }
     }
     
     private boolean isMember(int customerId) {
@@ -161,7 +263,14 @@ public class SalesTransactionModel extends JFrame {
         
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        nextButton.addActionListener(e -> cardLayout.show(cardPanel, "PRODUCTS"));
+        nextButton.addActionListener(e -> {
+            // validate
+            if (salesRepCombo.getSelectedItem() == null || branchCombo.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(this, "Please select both Sales Rep and Branch", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            cardLayout.show(cardPanel, "PRODUCTS");
+        });
         
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButton);
@@ -220,12 +329,13 @@ public class SalesTransactionModel extends JFrame {
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
         prevButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
         
-        JButton nextButton = new JButton("Proceed to Payment");
-        nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        nextButton.addActionListener(e -> cardLayout.show(cardPanel, "PAYMENT"));
+        nextButtonProducts = new JButton("Proceed to Payment");
+        nextButtonProducts.setFont(new Font("Arial", Font.PLAIN, 18));
+        nextButtonProducts.setEnabled(false);
+        nextButtonProducts.addActionListener(e -> cardLayout.show(cardPanel, "PAYMENT"));
         
         buttonPanel.add(prevButton);
-        buttonPanel.add(nextButton);
+        buttonPanel.add(nextButtonProducts);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -247,11 +357,16 @@ public class SalesTransactionModel extends JFrame {
             saleItems.add(new SaleItem(productName, quantity, unitPrice));
             totalAmount += subtotal;
             updateItemsTable();
+            updateProceedButton();
             
             quantityField.setText("");
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Invalid quantity", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    private void updateProceedButton() {
+        nextButtonProducts.setEnabled(!saleItems.isEmpty());
     }
     
     private double getProductPrice(String productName) {
@@ -336,6 +451,11 @@ public class SalesTransactionModel extends JFrame {
             
             // create sale record
             int salesId = createSaleRecord(conn);
+            
+            if (salesId == -1) {
+                JOptionPane.showMessageDialog(this, "Failed to create sale record", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             
             // create sale items
             for (SaleItem item : saleItems) {
