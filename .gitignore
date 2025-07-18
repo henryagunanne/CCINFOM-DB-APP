@@ -6,3 +6,11 @@ AnimalShelter.mwb
 ProductModel$1.class
 ProductModel.class
 MainMenuGUI.class
+Reciept.java
+/libs
+/iText7-Core-7
+SalesRepModel.class
+SalesTransactionModel.class
+SalesTransactionModel$SaleItem.class
+View.class
+ProductModel.class
