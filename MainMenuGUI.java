@@ -21,6 +21,7 @@ public class MainMenuGUI extends JPanel{
     final public String b2Text = "Customer Record Management";
     final public String b3Text = "Sales Rep Record Management";
     final public String b4Text = "Branch Record Management";
+    final public String b5Text = "New Sale";
 
     final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
@@ -57,16 +58,19 @@ public class MainMenuGUI extends JPanel{
         JButton btn2 = new JButton(b2Text);
         JButton btn3 = new JButton(b3Text);
         JButton btn4 = new JButton(b4Text);
+        JButton btn5 = new JButton(b5Text);
 
         btn1.setFont(font);
         btn2.setFont(font);
         btn3.setFont(font);
         btn4.setFont(font);
+        btn5.setFont(font);
 
         btn1.setPreferredSize(buttonSize);
         btn2.setPreferredSize(buttonSize);
         btn3.setPreferredSize(buttonSize);
         btn4.setPreferredSize(buttonSize);
+        btn5.setPreferredSize(buttonSize);
 
         btn1.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
@@ -74,11 +78,12 @@ public class MainMenuGUI extends JPanel{
         });
         //TODO: edit the action listeners for the buttons below
         // btn2.addActionListener(e -> );
-        // btn3.addActionListener(e -> )
+        btn3.addActionListener(e -> new SalesRepModel());
         btn4.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
             cl.show(cardPanel, "branch");
         });
+        btn5.addActionListener(e -> new SalesTransactionModel());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -98,6 +103,12 @@ public class MainMenuGUI extends JPanel{
 
         gbc.gridy = 5;
         mainPanel.add(btn4, gbc);
+
+        gbc.gridy = 6;
+        mainPanel.add(btn5, gbc);
+
+        gbc.gridy = 6;
+        mainPanel.add(btn5, gbc);
 
         this.add(mainPanel, BorderLayout.CENTER);
         this.revalidate();

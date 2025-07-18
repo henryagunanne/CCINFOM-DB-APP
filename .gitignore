@@ -14,3 +14,11 @@ Reciept.java
 View.class
 
 ProductModel.class
+Reciept.java
+/libs
+/iText7-Core-7
+SalesRepModel.class
+SalesTransactionModel.class
+SalesTransactionModel$SaleItem.class
+View.class
+ProductModel.class
