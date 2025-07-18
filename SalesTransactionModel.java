@@ -74,7 +74,7 @@ public class SalesTransactionModel extends JFrame {
         JPanel centerPanel = new JPanel(new GridLayout(3, 1, 10, 10));
         centerPanel.setBackground(Color.WHITE);
         
-        // Customer selection row
+        // customer selection
         JPanel customerRow = new JPanel(new BorderLayout());
         customerCombo = new JComboBox<>(new DisplayData().getComboBoxData(
             "SELECT CONCAT(customer_id, ' - ', first_name, ' ', last_name) FROM customer"
