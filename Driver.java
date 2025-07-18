@@ -26,7 +26,7 @@ public class Driver {
         try {
             // Try to load the MySQL driver
             Class.forName("com.mysql.cj.jdbc.Driver");
-
+            // If successful, start the application
             SwingUtilities.invokeLater(() -> new View());
         } catch (ClassNotFoundException e) {
             // Driver not found, try to run the appropriate script
