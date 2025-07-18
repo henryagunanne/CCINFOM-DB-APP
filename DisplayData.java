@@ -6,9 +6,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.sql.*;
 
-import com.itextpdf.kernel.pdf.*;
-import com.itextpdf.layout.*;
-import com.itextpdf.layout.element.Paragraph;
 /*import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -50,8 +47,8 @@ public class DisplayData {
     private final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
     
-    public void displayData(JFrame parent, ResultSet rs, String titleText, ActionListener backAction) {
-        parent.getContentPane().removeAll();
+    public void displayData(JPanel parent, ResultSet rs, String titleText, ActionListener backAction) {
+        parent.removeAll();
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
         
@@ -69,7 +66,7 @@ public class DisplayData {
         backPanel.add(backButton);
         panel.add(backPanel, BorderLayout.SOUTH);
         
-        parent.getContentPane().add(panel);
+        parent.add(panel, BorderLayout.CENTER);
         parent.revalidate();
         parent.repaint();
     }
@@ -101,10 +98,10 @@ public class DisplayData {
         }
     }
     
-    public void showStockTransfer(JFrame parent, JComboBox<String> sourceBranch, JComboBox<String> destBranch, 
+    public void showStockTransfer(JPanel parent, JComboBox<String> sourceBranch, JComboBox<String> destBranch, 
                                  JComboBox<String> productBox, JTextField quantityField, 
                                  ActionListener submitAction, ActionListener backAction) {
-        parent.getContentPane().removeAll();
+        parent.removeAll();
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
         
@@ -141,7 +138,7 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.getContentPane().add(panel);
+        parent.add(panel, BorderLayout.CENTER);
         parent.revalidate();
         parent.repaint();
     }
@@ -165,14 +162,12 @@ public class DisplayData {
     }
 
 
-    public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
+    public void showProcessReturn(JPanel parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
                                  JComboBox<String> customerName, JLabel customerId, JComboBox<String> returnItem,
                                  JTextField quantityField, JTextField reasonField, ActionListener submitAction, 
                                  ActionListener backAction){
 
-                                 
-        parent.getContentPane().removeAll();
-
+        parent.removeAll();
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
 
@@ -225,17 +220,16 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.getContentPane().add(panel);
+        parent.add(panel, BorderLayout.CENTER);
         parent.revalidate();
         parent.repaint();
     }
 
 
-    public void showRestockProducts(JFrame parent, JComboBox<String> branchName, JComboBox<String> productName, 
+    public void showRestockProducts(JPanel parent, JComboBox<String> branchName, JComboBox<String> productName, 
                                     JComboBox<String> supplier, JTextField quantityField, JLabel costLabel, 
                                     ActionListener submitAction, ActionListener backAction){
-        parent.getContentPane().removeAll();
-
+        parent.removeAll();
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
 
@@ -284,54 +278,9 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.getContentPane().add(panel);
+        parent.add(panel, BorderLayout.CENTER);
         parent.revalidate();
         parent.repaint();
-    }
-
-
-    public void generateReciept(JFrame parent, String receiptContent) {
-         // Show the receipt preview first
-        JTextArea textArea = new JTextArea(receiptContent);
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(500, 400));
-
-        int result = JOptionPane.showConfirmDialog(
-            parent,
-            scrollPane,
-            "Receipt Preview - Save as PDF?",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (result == JOptionPane.YES_OPTION) {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Save Receipt as PDF");
-
-            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                if (!file.getName().toLowerCase().endsWith(".pdf")) {
-                    file = new File(file.getAbsolutePath() + ".pdf");
-                }
-
-                try {
-                    PdfWriter writer = new PdfWriter(file);
-                    PdfDocument pdfDoc = new PdfDocument(writer);
-                    Document document = new Document(pdfDoc);
-
-                    for (String line : receiptContent.split("\\n")) {
-                        document.add(new Paragraph(line));
-                    }
-
-                    document.close();
-                    JOptionPane.showMessageDialog(parent, "PDF saved successfully.");
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(parent, "Error saving PDF: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }
     }
 }
 

@@ -29,12 +29,12 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;*/
 
 // RUN JAVA BUTTON NOT THE CODE RUNNER IN VSCODE!!!!
-public class BranchModel extends JFrame {
+public class BranchModel extends JPanel {
     // Change these values to your database credentials if necessary. Credentials are based on my MacOS
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
@@ -49,23 +49,29 @@ public class BranchModel extends JFrame {
     private JTextField quantityField;
     private DisplayData displayData = new DisplayData();
 
-    public BranchModel() {
+    final private JPanel cardPanel;
+
+    public BranchModel(JPanel cardPanel) {
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-        setTitle("Branch Record");
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(800, 400);
-        setLocationRelativeTo(null);
+
+        this.cardPanel = cardPanel;
+        //setTitle("Branch Record");
+        //setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        //setSize(800, 500);
+        //setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         showMainMenu();
-        setVisible(true);
+        //setVisible(true);
     }
 
     private void showMainMenu() {
-        getContentPane().removeAll();
+        this.removeAll();
         
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -111,7 +117,10 @@ public class BranchModel extends JFrame {
         });
 
         btn3.addActionListener(e -> showStockTransfer());
-        prevBtn.addActionListener(e -> new MainMenuGUI());
+        prevBtn.addActionListener(e ->{
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -132,9 +141,9 @@ public class BranchModel extends JFrame {
         gbc.gridy = 4;
         mainPanel.add(prevBtn, gbc);
 
-        getContentPane().add(mainPanel);
-        revalidate();
-        repaint();
+        this.add(mainPanel);
+        this.revalidate();
+        this.repaint();
     }
 
     private void showStockTransfer() {

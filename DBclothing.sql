@@ -195,10 +195,10 @@ ENGINE = InnoDB;
 -- Dumping data for table `Customer`
 -- 
 INSERT INTO `Customer` VALUES
-(1001, 'Anna', 'Reyes', 'anna.reyes@email.com', 'TRUE'),
-(1002, 'Marco', 'Tan', 'marco.tan@email.com', 'TRUE'),
-(1003, 'Carla', 'Lopez', 'carla.lopez@email.com', 'FALSE'),
-(1004, 'Rico', 'Torres', 'rico.torres@email.com', 'TRUE');
+(3001, 'Anna', 'Reyes', 'anna.reyes@email.com', 'TRUE'),
+(3002, 'Marco', 'Tan', 'marco.tan@email.com', 'TRUE'),
+(3003, 'Carla', 'Lopez', 'carla.lopez@email.com', 'FALSE'),
+(3004, 'Rico', 'Torres', 'rico.torres@email.com', 'TRUE');
 -- ------------------------------------------------------
 
 
@@ -215,17 +215,17 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Member` (
   CONSTRAINT `fk_Member_Customer1`
     FOREIGN KEY (`customer_id`)
     REFERENCES `DBclothing`.`Customer` (`customer_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 --
 -- Dumping data for table `Member`
 --
 INSERT INTO `Member` VALUES
-(2001, 1001, 'Female', '2024-06-01'),
-(2002, 1002, 'Male', '2024-06-03'),
-(2004, 1004, 'Male', '2024-06-07');
+(2001, 3001, 'Female', '2024-06-01'),
+(2002, 3002, 'Male', '2024-06-03'),
+(2004, 3004, 'Male', '2024-06-07');
 
 -- ------------------------------------------------------
 
@@ -245,8 +245,8 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`SalesRep` (
   CONSTRAINT `fk_SalesRep_Branch1`
     FOREIGN KEY (`branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 --
@@ -278,18 +278,18 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Sales` (
   CONSTRAINT `fk_Sales_Member1`
     FOREIGN KEY (`customer_id`)
     REFERENCES `DBclothing`.`Customer` (`customer_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_Sales_SalesRep1`
     FOREIGN KEY (`sales_rep_id`)
     REFERENCES `DBclothing`.`SalesRep` (`sales_rep_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_Sales_Branch1`
     FOREIGN KEY (`branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -297,9 +297,9 @@ ENGINE = InnoDB;
 -- Dumping data for table `Sales`
 --
 INSERT INTO `Sales` VALUES
-(5001, 1001, 201, 'B001', '2025-06-10', 'Credit Card', 1500.00),
-(5002, 1002, 202, 'B002', '2025-06-11', 'Cash', 700.00),
-(5003, 1003, 201, 'B001', '2025-06-12', 'Cash', 400.00);
+(5001, 3001, 201, 'B001', '2025-06-10', 'Credit Card', 1500.00),
+(5002, 3002, 202, 'B002', '2025-06-11', 'Cash', 700.00),
+(5003, 3003, 201, 'B001', '2025-06-12', 'Cash', 1200.00);
 
 -- ------------------------------------------------------
 
@@ -309,24 +309,25 @@ INSERT INTO `Sales` VALUES
 -- 
 CREATE TABLE IF NOT EXISTS `DBclothing`.`SalesItems` (
   `sale_item_id` INT NOT NULL,
-  `sale_id` INT NOT NULL,
+  `sales_id` INT NOT NULL,
   `product_id` INT NOT NULL,
   `quantity_ordered` INT NOT NULL,
   `unit_price` DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (`sale_item_id`),
-  INDEX `fk_Sales Items_Sales1_idx` (`sale_id` ASC) VISIBLE,
+  INDEX `fk_Sales Items_Sales1_idx` (`sales_id` ASC) VISIBLE,
   INDEX `fk_Sales Items_Product1_idx` (`product_id` ASC) VISIBLE,
   CONSTRAINT `fk_SalesItems_Sales1`
-    FOREIGN KEY (`sale_id`)
+    FOREIGN KEY (`sales_id`)
     REFERENCES `DBclothing`.`Sales` (`sales_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_SalesItems_Product1`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
+
 
 
 --
@@ -336,7 +337,7 @@ INSERT INTO `SalesItems` VALUES
 (1, 5001, 1001, 2, 400.00),
 (2, 5001, 1002, 1, 700.00),
 (3, 5002, 1002, 1, 700.00),
-(4, 5003, 1001, 1, 400.00);
+(4, 5003, 1001, 3, 400.00);
 
 -- ------------------------------------------------------
 
@@ -361,8 +362,8 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`Restock` (
   CONSTRAINT `fk_Restock_Supplier1`
     FOREIGN KEY (`supplier_id`)
     REFERENCES `DBclothing`.`Supplier` (`supplier_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -421,16 +422,9 @@ INSERT INTO `Restock` VALUES
 --
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Returns` (
   `return_id` INT NOT NULL,
-  `sale_id` INT NOT NULL,
   `return_date` DATE NOT NULL,
   `reason` TEXT NOT NULL,
-  PRIMARY KEY (`return_id`),
-  INDEX `fk_Returns_Sales1_idx` (`sale_id` ASC) VISIBLE,
-  CONSTRAINT `fk_Returns_Sales1`
-    FOREIGN KEY (`sale_id`)
-    REFERENCES `DBclothing`.`Sales` (`sales_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`return_id`))
 ENGINE = InnoDB;
 
 
@@ -438,8 +432,8 @@ ENGINE = InnoDB;
 -- Dumping data for table `Returns`
 --
 INSERT INTO `Returns` VALUES
-(7001, 5001, '2025-06-13', 'Size too small'),
-(7002, 5003, '2025-06-14', 'Defective item');
+(7001, '2025-06-13', 'Size too small'),
+(7002, '2025-06-14', 'Defective item');
 -- ------------------------------------------------------
 
 
@@ -457,13 +451,13 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`ReturnItems` (
   CONSTRAINT `fk_ReturnItems_Product1`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_ReturnItems_Returns1`
     FOREIGN KEY (`return_id`)
     REFERENCES `DBclothing`.`Returns` (`return_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -495,18 +489,18 @@ CREATE TABLE IF NOT EXISTS `DBclothing`.`StockTransfer` (
   CONSTRAINT `fk_StockTransfer_Branch1`
     FOREIGN KEY (`source_branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_StockTransfer_Product2`
     FOREIGN KEY (`product_id`)
     REFERENCES `DBclothing`.`Product` (`product_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_StockTransfer_Branch2`
     FOREIGN KEY (`dest_branch_code`)
     REFERENCES `DBclothing`.`Branch` (`branch_code`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 --

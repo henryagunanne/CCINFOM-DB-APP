@@ -2,8 +2,11 @@
 
 import javax.swing.*;
 import javax.swing.event.*;
+
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +41,7 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;*/
 
-public class ProductModel extends JFrame{
+public class ProductModel extends JPanel{
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
@@ -56,30 +59,29 @@ public class ProductModel extends JFrame{
     final Dimension buttonSize = new Dimension(350, 50);
 
     private DisplayData displayData = new DisplayData();
+    final private JPanel cardPanel;
 
-    public ProductModel(){
-        super("Product Records");
+    public ProductModel(JPanel cardPanel){
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
+
+        this.cardPanel = cardPanel;
         // super("Product Records");
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
-        setSize(800, 400);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         productMenu();
 
-        setVisible(true);
+        //setVisible(true);
     }
 
     private void productMenu(){
-        this.getContentPane().removeAll();
-
+    
+        this.removeAll();
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
 
@@ -120,13 +122,16 @@ public class ProductModel extends JFrame{
         btn2.addActionListener(e -> showPurchaseHistory());
         btn3.addActionListener(e -> displayProcessReturn());
         btn4.addActionListener(e -> displayRestockProduct());
-        prevBtn.addActionListener(e -> new MainMenuGUI());
+        prevBtn.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        //gbc.fill = GridBagConstraints.HORIZONTAL;
 
         mainPanel.add(titleLbl, gbc);
 
@@ -146,7 +151,7 @@ public class ProductModel extends JFrame{
         mainPanel.add(prevBtn, gbc);
 
 
-        this.getContentPane().add(mainPanel);
+        this.add(mainPanel, BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
     }
@@ -169,9 +174,9 @@ public class ProductModel extends JFrame{
 
 
     private void showPurchaseHistory(){
+        this.removeAll();
         JComboBox<String> products = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM Product ORDER BY product_name"));
 
-        this.getContentPane().removeAll();
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
@@ -222,7 +227,7 @@ public class ProductModel extends JFrame{
 
         backBtn.addActionListener(e -> productMenu());
 
-        this.getContentPane().add(panel);
+        this.add(panel, BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
     }
@@ -316,7 +321,7 @@ public class ProductModel extends JFrame{
                         productMenu();
                     }
                 }catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Invalid quantity value");
+                    JOptionPane.showMessageDialog(this, "Invalid quantity value");
                 }
                 
             }, e -> productMenu());
@@ -370,12 +375,17 @@ public class ProductModel extends JFrame{
     }
     
 
+    
     private boolean processReturn(String branchCode, String saleDate, String productName, String reason, int quantity){
         String getSaleIdQuery = "SELECT s.sales_id FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE sale_date = ? AND product_id = ? AND branch_code = ?";
         String getProductIdQuery = "SELECT product_id FROM Product WHERE product_name = ?";
         String checkQuantityQuery = "SELECT quantity_ordered FROM SalesItems WHERE sales_id = ? AND product_id = ?";
-        String updateReturnsQuery = "INSERT INTO Returns VALUES(?, ?, ?, ?)";
-        String updateReturnItemsQuery = "INSERT INTO ReturnItems VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + ?";
+        String updateSalesQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sales_id = ? AND sale_date = ? and branch_code = ?";
+        String deleteSalesQuery = "DELETE s FROM Sales s JOIN SalesItems i ON i.sales_id = s.sales_id WHERE s.sales_id = ? AND s.sale_date = ? AND i.product_id = ?";
+        String updateSalesItemsQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? WHERE sales_id = ? AND product_id = ?";
+        String deleteSalesItemsQuery = "DELETE FROM SalesItems WHERE sales_id = ? AND product_id = ?";
+        String updateReturnsQuery = "INSERT INTO Returns (return_id, return_date, reason) VALUES (?, ?, ?)";
+        String updateReturnItemsQuery = "INSERT INTO ReturnItems (return_item_id, return_id, product_id, quantity_returned) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + VALUES(quantity_returned)";
 
 
         try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
@@ -431,41 +441,91 @@ public class ProductModel extends JFrame{
 
 
                 // update tables
-                try (PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
+                try (PreparedStatement updateSalesStmt = conn.prepareStatement(updateSalesQuery);
+                     PreparedStatement deleteSalesStmt = conn.prepareStatement(deleteSalesQuery);
+                     PreparedStatement updateSalesItemsStmt = conn.prepareStatement(updateSalesItemsQuery);
+                     PreparedStatement deleteSalesItemsStmt = conn.prepareStatement(deleteSalesItemsQuery);
+                     PreparedStatement updateReturnsStmt = conn.prepareStatement(updateReturnsQuery);
                      PreparedStatement updateReturnItemsStmt = conn.prepareStatement(updateReturnItemsQuery)) {
 
+                    String unitPrice = "Select unit_price FROM SalesItems WHERE sales_id = '" + saleId + "'" + " AND product_id = '" + productId + "'";
                     String strReturnId = "SELECT * FROM Returns ORDER BY return_id DESC LIMIT 1;";
                     String strReturnItemId = "SELECT * FROM ReturnItems ORDER BY return_item_id DESC LIMIT 1;";
 
                     LocalDate today = LocalDate.now();
                     String dateStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
+                    double returnedPrice = -1;
                     int returnId = -1;
                     int returnItemId = -1;
             
-                    try(ResultSet rsReturnId = executeQuery(strReturnId);
+                    try(ResultSet rsPrice = executeQuery(unitPrice);
+                        ResultSet rsReturnId = executeQuery(strReturnId);
                         ResultSet rsReturnItemId = executeQuery(strReturnItemId)){
                         
-                        if (rsReturnId.next() && rsReturnItemId.next()) {
-                            returnId = rsReturnId.getInt("return_id");
-                            returnItemId = rsReturnItemId.getInt("return_item_id");
+                        if (rsPrice.next() && rsReturnId.next() && rsReturnItemId.next()) {
+                            returnedPrice = rsPrice.getDouble("unit_price") * quantity;
+                            returnId = rsReturnId.getInt("return_id") + 1;
+                            returnItemId = rsReturnItemId.getInt("return_item_id") + 1;
                         } 
-                    
-                        updateReturnsStmt.setInt(1, returnId + 1);
-                        updateReturnsStmt.setInt(2, saleId);
-                        updateReturnsStmt.setString(3, dateStr);
-                        updateReturnsStmt.setString(4, reason);
-                        updateReturnsStmt.executeUpdate();
-                        
-                        updateReturnItemsStmt.setInt(1, returnItemId + 1);
-                        updateReturnItemsStmt.setInt(2, returnId + 1);
-                        updateReturnItemsStmt.setInt(3, productId);
-                        updateReturnItemsStmt.setInt(4, quantity);
-                        updateReturnItemsStmt.setInt(5, quantity);
-                        updateReturnItemsStmt.executeUpdate();
-                        
-                        conn.commit(); // Commit transaction
-                        return true;
+
+                        if (quantity < quantity_ordered && quantity > 0){
+
+                            updateSalesStmt.setDouble(1, returnedPrice);
+                            updateSalesStmt.setInt(2, saleId);
+                            updateSalesStmt.setString(3, saleDate);
+                            updateSalesStmt.setString(4, branchCode);
+                            updateSalesStmt.executeUpdate();
+
+                            updateSalesItemsStmt.setInt(1, quantity);
+                            updateSalesItemsStmt.setInt(2, saleId);
+                            updateSalesItemsStmt.setInt(3, productId);
+                            updateSalesItemsStmt.executeUpdate();
+
+                            updateReturnsStmt.setInt(1, returnId);
+                            //updateReturnsStmt.setInt(2, saleId);
+                            updateReturnsStmt.setString(2, dateStr);
+                            updateReturnsStmt.setString(3, reason);
+                            updateReturnsStmt.executeUpdate();
+                            //conn.commit(); 
+
+                            updateReturnItemsStmt.setInt(1, returnItemId);
+                            updateReturnItemsStmt.setInt(2, returnId);
+                            updateReturnItemsStmt.setInt(3, productId);
+                            updateReturnItemsStmt.setInt(4, quantity);
+                            updateReturnItemsStmt.executeUpdate();
+                            
+                            conn.commit(); // Commit transaction
+                            
+                            return true;
+
+                        }else if (quantity_ordered == quantity){
+
+                            updateReturnsStmt.setInt(1, returnId);
+                            // updateReturnsStmt.setInt(2, saleId);
+                            updateReturnsStmt.setString(2, dateStr);
+                            updateReturnsStmt.setString(3, reason);
+                            updateReturnsStmt.executeUpdate();
+                            
+                            updateReturnItemsStmt.setInt(1, returnItemId);
+                            updateReturnItemsStmt.setInt(2, returnId);
+                            updateReturnItemsStmt.setInt(3, productId);
+                            updateReturnItemsStmt.setInt(4, quantity);
+                            updateReturnItemsStmt.executeUpdate();
+
+                            deleteSalesStmt.setInt(1, saleId);
+                            deleteSalesStmt.setString(2, saleDate);
+                            deleteSalesStmt.setInt(3, productId);
+                            deleteSalesStmt.executeUpdate();
+    
+                            deleteSalesItemsStmt.setInt(1, saleId);
+                            deleteSalesItemsStmt.setInt(2, productId);
+                            deleteSalesItemsStmt.executeUpdate();
+
+                            
+                            conn.commit(); // Commit transaction
+                            return true;
+                        }
                     }
                 }
             }catch (SQLException e) {
@@ -538,10 +598,10 @@ public class ProductModel extends JFrame{
 
                     if(restockProduct(branch, product, strSupplier, quantity, cost)){
                         JOptionPane.showMessageDialog(this, "Product restocked successfully!");
+                        productMenu();
                     }
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
-                    productMenu();
                 }
             }, e -> productMenu());
     }
@@ -631,96 +691,6 @@ public class ProductModel extends JFrame{
         }catch (SQLException e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-
-
-    private void generateAndSaveReturnReceipt(int returnId) {
-        StringBuilder receipt = new StringBuilder();
-    
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
-            String returnQuery = "SELECT r.return_date, r.reason, s.sales_date, b.branch_name, c.first_name, c.last_name " +
-                                 "FROM Returns r " +
-                                 "JOIN Sales s ON r.sales_id = s.sales_id " +
-                                 "JOIN Customer c ON s.customer_id = c.customer_id " +
-                                 "JOIN Branch b ON s.branch_code = b.branch_code " +
-                                 "WHERE r.return_id = ?";
-    
-            String itemsQuery = "SELECT p.product_name, ri.quantity_returned " +
-                                "FROM ReturnItems ri " +
-                                "JOIN Product p ON ri.product_id = p.product_id " +
-                                "WHERE ri.return_id = ?";
-    
-            PreparedStatement returnStmt = conn.prepareStatement(returnQuery);
-            returnStmt.setInt(1, returnId);
-            ResultSet rs = returnStmt.executeQuery();
-    
-            if (!rs.next()) {
-                JOptionPane.showMessageDialog(this, "Return not found.");
-                return;
-            }
-    
-            // Header info
-            String returnDate = rs.getString("return_date");
-            String reason = rs.getString("reason");
-            String saleDate = rs.getString("sale_date");
-            String customer = rs.getString("first_name") + " " + rs.getString("last_name");
-            String branch = rs.getString("branch_name");
-    
-            receipt.append("        RETURN RECEIPT\n");
-            receipt.append("-------------------------------\n");
-            receipt.append("Return Date: ").append(returnDate).append("\n");
-            receipt.append("Original Sale: ").append(saleDate).append("\n");
-            receipt.append("Customer: ").append(customer).append("\n");
-            receipt.append("Branch: ").append(branch).append("\n");
-            receipt.append("Reason: ").append(reason).append("\n");
-            receipt.append("-------------------------------\n");
-            receipt.append("Item                     Qty\n");
-    
-            PreparedStatement itemsStmt = conn.prepareStatement(itemsQuery);
-            itemsStmt.setInt(1, returnId);
-            ResultSet itemRs = itemsStmt.executeQuery();
-    
-            while (itemRs.next()) {
-                String name = itemRs.getString("product_name");
-                int qty = itemRs.getInt("quantity_returned");
-    
-                receipt.append(String.format("%-24s %4d\n", name, qty));
-            }
-    
-            receipt.append("-------------------------------\n");
-            receipt.append("Thank you. We have received the returned item(s).\n");
-    
-            // Show preview
-            JTextArea previewArea = new JTextArea(receipt.toString());
-            previewArea.setEditable(false);
-            previewArea.setFont(new java.awt.Font("Monospaced", Font.PLAIN, 14));
-            JScrollPane scroll = new JScrollPane(previewArea);
-            scroll.setPreferredSize(new java.awt.Dimension(400, 300));
-    
-            int option = JOptionPane.showConfirmDialog(this, scroll, "Return Receipt Preview", JOptionPane.OK_CANCEL_OPTION);
-            if (option == JOptionPane.OK_OPTION) {
-                // Save as PDF
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Save Return Receipt As PDF");
-                fileChooser.setSelectedFile(new File("return_receipt_" + returnId + ".pdf"));
-    
-                if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    try (PdfWriter writer = new PdfWriter(new FileOutputStream(file));
-                         PdfDocument pdf = new PdfDocument(writer);
-                         Document doc = new Document(pdf)) {
-    
-                        doc.add(new Paragraph(receipt.toString()));
-                        JOptionPane.showMessageDialog(this, "Return receipt saved successfully!");
-                    }
-                }
-            }
-    
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to generate return receipt: " + e.getMessage());
         }
     }
 }
