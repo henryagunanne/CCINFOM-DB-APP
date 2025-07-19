@@ -25,6 +25,35 @@ public class BranchPanel extends JPanel {
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
+    // stock transfer w inventory updates
+    private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
+        String sql = "UPDATE Inventory src " +
+                     "JOIN Inventory dest ON dest.product_id = src.product_id " +
+                     "JOIN Branch srcBr ON srcBr.branch_code = src.branch_code " +
+                     "JOIN Branch destBr ON destBr.branch_code = dest.branch_code " +
+                     "JOIN Product p ON p.product_id = src.product_id " +
+                     "SET src.quantity = src.quantity - ?, " +
+                     "    dest.quantity = dest.quantity + ? " +
+                     "WHERE srcBr.branch_name = ? " +
+                     "  AND destBr.branch_name = ? " +
+                     "  AND p.product_name = ?";
+        
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, quantity);
+            stmt.setString(3, sourceBranchName);
+            stmt.setString(4, destBranchName);
+            stmt.setString(5, productName);
+            
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public BranchPanel(ClothingStoreApp app) {
         this.mainApp = app;
         setLayout(new BorderLayout());
