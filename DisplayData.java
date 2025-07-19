@@ -278,6 +278,27 @@ public class DisplayData {
         parent.revalidate();
         parent.repaint();
     }
+
+    // secure method to get combo box data
+    public String[] getComboBoxDataSecure(String query, Object... params) {
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            List<String> dataList = new ArrayList<>();
+            while (rs.next()) {
+                dataList.add(rs.getString(1));
+            }
+            return dataList.toArray(new String[0]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new String[0];
+        }
+    }
 }
 
 
