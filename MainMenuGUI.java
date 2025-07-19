@@ -78,12 +78,20 @@ public class MainMenuGUI extends JPanel{
         });
         //TODO: edit the action listeners for the buttons below
         // btn2.addActionListener(e -> );
-        btn3.addActionListener(e -> new SalesRepModel());
+        btn3.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "salesRep");
+        });
+
         btn4.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
             cl.show(cardPanel, "branch");
         });
-        btn5.addActionListener(e -> new SalesTransactionModel());
+
+        btn5.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "salesTransaction");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -103,9 +111,6 @@ public class MainMenuGUI extends JPanel{
 
         gbc.gridy = 5;
         mainPanel.add(btn4, gbc);
-
-        gbc.gridy = 6;
-        mainPanel.add(btn5, gbc);
 
         gbc.gridy = 6;
         mainPanel.add(btn5, gbc);

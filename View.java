@@ -11,8 +11,10 @@ public class View extends JFrame{
 
         JPanel cardPanel = new JPanel(new CardLayout());
         cardPanel.add(new MainMenuGUI(cardPanel), "mainMenu");
-        cardPanel.add(new BranchModel(cardPanel), "branch");
         cardPanel.add(new ProductModel(cardPanel), "products");
+        cardPanel.add(new SalesRepModel(cardPanel), "salesRep");
+        cardPanel.add(new BranchModel(cardPanel), "branch");
+        cardPanel.add(new SalesTransactionModel(this, cardPanel), "salesTransaction");
        
         this.add(cardPanel, BorderLayout.CENTER);
         

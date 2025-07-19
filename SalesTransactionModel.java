@@ -1,4 +1,5 @@
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -6,13 +7,15 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SalesTransactionModel extends JFrame {
+import javax.swing.text.PlainView;
+
+public class SalesTransactionModel extends JPanel {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
     final private String PASSWORD = "AGUnanne1";
 
-    private JPanel cardPanel;
+    final private JPanel cardPanel;
     private CardLayout cardLayout;
     private List<SaleItem> saleItems;
     private double totalAmount;
@@ -32,37 +35,48 @@ public class SalesTransactionModel extends JFrame {
     private JLabel totalLabel;
     private JButton nextButtonProducts;
 
-    public SalesTransactionModel() {
+    final private View view;
+
+    public SalesTransactionModel(View view, JPanel cardPanel) {
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-        setTitle("New Sale");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(800, 500);
-        setLocationRelativeTo(null);
 
+        this.cardPanel = cardPanel;
+        this.view = view;
+        //setTitle("New Sale");
+        //setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        //setSize(800, 500);
+        //setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
+
+        createCustomerPanel();
         saleItems = new ArrayList<>();
         totalAmount = 0.0;
 
-        cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
+        //cardLayout = new CardLayout();
+        //cardPanel = new JPanel(cardLayout);
 
+        /* 
         // panels for each step
         cardPanel.add(createCustomerPanel(), "CUSTOMER");
         cardPanel.add(createSalesRepBranchPanel(), "SALES_REP_BRANCH");
         cardPanel.add(createProductsPanel(), "PRODUCTS");
         cardPanel.add(createPaymentPanel(), "PAYMENT");
         cardPanel.add(createConfirmationPanel(), "CONFIRMATION");
+        */
 
-        add(cardPanel);
-        cardLayout.show(cardPanel, "CUSTOMER");
-        setVisible(true);
+        //this.add(cardPanel);
+       // cardLayout.show(cardPanel, "CUSTOMER");
+        // setVisible(true);
     }
 
-    private JPanel createCustomerPanel() {
+    private void createCustomerPanel() {
+        this.removeAll();
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
@@ -116,58 +130,64 @@ public class SalesTransactionModel extends JFrame {
         JButton backButton = new JButton("Back to Main Menu");
         backButton.setFont(new Font("Arial", Font.PLAIN, 18));
         backButton.addActionListener(e -> {
-            dispose();
-            new MainMenuGUI().setVisible(true);
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
         });
         buttonPanel.add(backButton, BorderLayout.WEST);
         
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        nextButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
+        nextButton.addActionListener(e -> createSalesRepBranchPanel());
         buttonPanel.add(nextButton, BorderLayout.EAST);
         
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return panel;
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
+
+        //return panel;
     }
     
     private void showNewCustomerDialog() {
-        JDialog dialog = new JDialog(this, "New Customer", true);
+        JDialog dialog = new JDialog(view, "New Customer", true);
         dialog.setLayout(new GridLayout(6, 2, 10, 10));
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
 
         JTextField firstNameField = new JTextField();
         JTextField lastNameField = new JTextField();
-        JTextField contactField = new JTextField();
         JTextField emailField = new JTextField();
-        JTextField addressField = new JTextField();
+        JTextField memberField = new JTextField();
 
         dialog.add(new JLabel("First Name*:"));
         dialog.add(firstNameField);
         dialog.add(new JLabel("Last Name*:"));
         dialog.add(lastNameField);
-        dialog.add(new JLabel("Contact*:"));
-        dialog.add(contactField);
-        dialog.add(new JLabel("Email:"));
+        dialog.add(new JLabel("Email*:"));
         dialog.add(emailField);
-        dialog.add(new JLabel("Address:"));
-        dialog.add(addressField);
+        dialog.add(new JLabel("Member? [YES or NO]:"));
+        dialog.add(memberField);
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> {
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
-            String contact = contactField.getText().trim();
             String email = emailField.getText().trim();
-            String address = addressField.getText().trim();
+            String member = memberField.getText().trim();
 
-            if (firstName.isEmpty() || lastName.isEmpty() || contact.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Contact are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Email are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            
+            if (member == null || member.equalsIgnoreCase("NO")){
+                member = "FALSE";
+            }else if (member.equalsIgnoreCase("YES")){
+                member = "TRUE";
+            }
 
-            if (saveNewCustomer(firstName, lastName, contact, email, address)) {
+            if (saveNewCustomer(firstName, lastName, member, email)) {
                 updateCustomerCombo();
                 dialog.dispose();
             }
@@ -183,17 +203,24 @@ public class SalesTransactionModel extends JFrame {
         dialog.add(buttonPanel);
 
         dialog.setVisible(true);
+        this.add(dialog);
     }
     
-    private boolean saveNewCustomer(String firstName, String lastName, String contact, String email, String address) {
-        String sql = "INSERT INTO customer (first_name, last_name, contact_number, email, address) VALUES (?, ?, ?, ?, ?)";
+    private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email) {
+        String sql = "INSERT INTO customer (customer_id, first_name, last_name, email, isMember) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, firstName);
-            stmt.setString(2, lastName);
-            stmt.setString(3, contact);
+
+            int customerId = -1;
+            try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer ORDER BY customer_id DESC LIMIT 1")) {
+                customerId = rs.next() ? rs.getInt("customer_id") + 1 : 3000;    
+
+            }
+            stmt.setInt(1, customerId);
+            stmt.setString(2, firstName);
+            stmt.setString(3, lastName);
             stmt.setString(4, email);
-            stmt.setString(5, address);
+            stmt.setString(5, isMember);
             int rows = stmt.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
@@ -225,7 +252,8 @@ public class SalesTransactionModel extends JFrame {
         }
     }
 
-    private JPanel createSalesRepBranchPanel() {
+    private void createSalesRepBranchPanel() {
+        this.removeAll();
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
@@ -259,7 +287,7 @@ public class SalesTransactionModel extends JFrame {
         
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        prevButton.addActionListener(e -> cardLayout.show(cardPanel, "CUSTOMER"));
+        prevButton.addActionListener(e -> createCustomerPanel());
         
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
@@ -269,17 +297,21 @@ public class SalesTransactionModel extends JFrame {
                 JOptionPane.showMessageDialog(this, "Please select both Sales Rep and Branch", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            cardLayout.show(cardPanel, "PRODUCTS");
+            createProductsPanel();
         });
         
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return panel;
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
+        //return panel;
     }
 
-    private JPanel createProductsPanel() {
+    private void createProductsPanel() {
+        this.removeAll();
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
@@ -327,18 +359,21 @@ public class SalesTransactionModel extends JFrame {
         
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        prevButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
+        prevButton.addActionListener(e -> createSalesRepBranchPanel());
         
         nextButtonProducts = new JButton("Proceed to Payment");
         nextButtonProducts.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButtonProducts.setEnabled(false);
-        nextButtonProducts.addActionListener(e -> cardLayout.show(cardPanel, "PAYMENT"));
+        nextButtonProducts.addActionListener(e -> createPaymentPanel());
         
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButtonProducts);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return panel;
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
+        //return panel;
     }
     
     private void addProductToSale() {
@@ -398,7 +433,8 @@ public class SalesTransactionModel extends JFrame {
         totalLabel.setText(String.format("Total: ₱%.2f", totalAmount));
     }
 
-    private JPanel createPaymentPanel() {
+    private void createPaymentPanel() {
+        this.removeAll();
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
@@ -428,13 +464,13 @@ public class SalesTransactionModel extends JFrame {
         
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        prevButton.addActionListener(e -> cardLayout.show(cardPanel, "PRODUCTS"));
+        prevButton.addActionListener(e -> createProductsPanel());
         
         JButton nextButton = new JButton("Complete Sale");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButton.addActionListener(e -> {
             paymentType = (String) paymentCombo.getSelectedItem();
-            cardLayout.show(cardPanel, "CONFIRMATION");
+            createConfirmationPanel();;
             completeSale();
         });
         
@@ -442,7 +478,10 @@ public class SalesTransactionModel extends JFrame {
         buttonPanel.add(nextButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return panel;
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
+        //return panel;
     }
     
     private void completeSale() {
@@ -511,7 +550,8 @@ public class SalesTransactionModel extends JFrame {
         }
     }
 
-    private JPanel createConfirmationPanel() {
+    private void createConfirmationPanel() {
+        this.removeAll();
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
@@ -526,14 +566,17 @@ public class SalesTransactionModel extends JFrame {
 
         JButton closeButton = new JButton("Close");
         closeButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        closeButton.addActionListener(e -> dispose());
+        closeButton.addActionListener(e -> view.dispose());
         
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.add(closeButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return panel;
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
+        //return panel;
     }
 
     // inner class for item in the sale

@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
-public class SalesRepModel extends JFrame {
+public class SalesRepModel extends JPanel {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
@@ -18,24 +18,28 @@ public class SalesRepModel extends JFrame {
     final Dimension buttonSize = new Dimension(350, 50);
 
     private DisplayData displayData = new DisplayData();
+    final private JPanel cardPanel;
 
-    public SalesRepModel() {
+    public SalesRepModel(JPanel cardPanel) {
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-        setTitle("Sales Representative Records");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(800, 400);
-        setLocationRelativeTo(null);
+        this.cardPanel = cardPanel;
+        //setTitle("Sales Representative Records");
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
+        //setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        //setSize(800, 400);
+        //setLocationRelativeTo(null);
         showMainMenu();
-        setVisible(true);
+        //setVisible(true);
     }
 
     private void showMainMenu() {
-        getContentPane().removeAll();
+        this.removeAll();
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -70,7 +74,10 @@ public class SalesRepModel extends JFrame {
 
         btn2.addActionListener(e -> showSelectSalesRepForSales());
 
-        prevBtn.addActionListener(e -> dispose());
+        prevBtn.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -88,15 +95,15 @@ public class SalesRepModel extends JFrame {
         gbc.gridy = 3;
         mainPanel.add(prevBtn, gbc);
 
-        getContentPane().add(mainPanel);
-        revalidate();
-        repaint();
+        this.add(mainPanel);
+        this.revalidate();
+        this.repaint();
     }
 
     private void showSelectSalesRepForSales() {
         JComboBox<String> salesRepComboBox = new JComboBox<>(displayData.getComboBoxData("SELECT name FROM salesrep ORDER BY name"));
 
-        getContentPane().removeAll();
+        this.removeAll();
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
@@ -147,9 +154,9 @@ public class SalesRepModel extends JFrame {
 
         backBtn.addActionListener(e -> showMainMenu());
 
-        getContentPane().add(panel);
-        revalidate();
-        repaint();
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
     }
 
     private ResultSet getSalesReps() {
