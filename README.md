@@ -166,7 +166,7 @@ Operations:
 
 Transaction 2: Restocking Products
 
-*Assigned to: Adriano, Mark Luis* \
+*Assigned to: Manatad, Francinne* \
 Operations:
 
 
