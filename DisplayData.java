@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /*import java.awt.BorderLayout;
 import java.awt.Color;
@@ -33,7 +35,7 @@ public class DisplayData {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "root";
     
     static {
         try {
@@ -300,5 +302,3 @@ public class DisplayData {
         }
     }
 }
-
-
