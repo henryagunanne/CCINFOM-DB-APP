@@ -6,14 +6,10 @@ import java.sql.*;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
-
+ 
 import javax.swing.text.PlainView;
 
 public class SalesTransactionModel extends JPanel {
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
 
     final private JPanel cardPanel;
     private CardLayout cardLayout;
@@ -35,16 +31,10 @@ public class SalesTransactionModel extends JPanel {
     private JLabel totalLabel;
     private JButton nextButtonProducts;
 
-    final private View view;
+    final private ClothingStore view;
 
-    public SalesTransactionModel(View view, JPanel cardPanel) {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
-
+    public SalesTransactionModel(ClothingStore view, JPanel cardPanel) {
+       
         this.cardPanel = cardPanel;
         this.view = view;
         //setTitle("New Sale");
@@ -208,7 +198,7 @@ public class SalesTransactionModel extends JPanel {
     
     private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email) {
         String sql = "INSERT INTO customer (customer_id, first_name, last_name, email, isMember) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int customerId = -1;
@@ -240,7 +230,7 @@ public class SalesTransactionModel extends JPanel {
     }
     
     private boolean isMember(int customerId) {
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM member WHERE customer_id = ?")) {
             stmt.setInt(1, customerId);
@@ -405,7 +395,7 @@ public class SalesTransactionModel extends JPanel {
     }
     
     private double getProductPrice(String productName) {
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT unit_price FROM product WHERE product_name = ?")) {
             stmt.setString(1, productName);
@@ -485,7 +475,7 @@ public class SalesTransactionModel extends JPanel {
     }
     
     private void completeSale() {
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+        try (Connection conn =DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             
             // create sale record
@@ -594,7 +584,7 @@ public class SalesTransactionModel extends JPanel {
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {

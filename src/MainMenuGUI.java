@@ -8,7 +8,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.lang.management.ThreadInfo;
-
+ 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,6 +22,7 @@ public class MainMenuGUI extends JPanel{
     final public String b3Text = "Sales Rep Record Management";
     final public String b4Text = "Branch Record Management";
     final public String b5Text = "New Sale";
+    final public String b6Text = "Reports";
 
     final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
@@ -59,18 +60,21 @@ public class MainMenuGUI extends JPanel{
         JButton btn3 = new JButton(b3Text);
         JButton btn4 = new JButton(b4Text);
         JButton btn5 = new JButton(b5Text);
+        JButton btn6 = new JButton(b6Text);
 
         btn1.setFont(font);
         btn2.setFont(font);
         btn3.setFont(font);
         btn4.setFont(font);
         btn5.setFont(font);
+        btn6.setFont(font);
 
         btn1.setPreferredSize(buttonSize);
         btn2.setPreferredSize(buttonSize);
         btn3.setPreferredSize(buttonSize);
         btn4.setPreferredSize(buttonSize);
         btn5.setPreferredSize(buttonSize);
+        btn6.setPreferredSize(buttonSize);
 
         btn1.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
@@ -95,6 +99,11 @@ public class MainMenuGUI extends JPanel{
         btn5.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
             cl.show(cardPanel, "salesTransaction");
+        });
+
+        btn6.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "reports");
         });
 
         GridBagConstraints gbc = new GridBagConstraints();

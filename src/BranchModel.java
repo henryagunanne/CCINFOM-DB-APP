@@ -31,10 +31,7 @@ import javax.swing.WindowConstants;*/
 // RUN JAVA BUTTON NOT THE CODE RUNNER IN VSCODE!!!!
 public class BranchModel extends JPanel {
     // Change these values to your database credentials if necessary. Credentials are based on my MacOS
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
+    
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
@@ -52,12 +49,6 @@ public class BranchModel extends JPanel {
     final private JPanel cardPanel;
 
     public BranchModel(JPanel cardPanel) {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
 
         this.cardPanel = cardPanel;
         //setTitle("Branch Record");
@@ -195,7 +186,7 @@ public class BranchModel extends JPanel {
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn =  DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {
@@ -212,7 +203,7 @@ public class BranchModel extends JPanel {
         String updateSourceQuery = "UPDATE Inventory SET quantity = quantity - ? WHERE branch_code = ? AND product_id = ?";
         String updateDestQuery = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+        try (Connection conn =  DBConnection.getConnection()) {
             conn.setAutoCommit(false); // Start transaction
 
             try (PreparedStatement getSourceIdStmt = conn.prepareStatement(getBranchIdQuery);

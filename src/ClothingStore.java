@@ -3,10 +3,10 @@ import java.awt.*;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class View extends JFrame{
+public class ClothingStore extends JFrame{
+ 
 
-
-    public View(){
+    public ClothingStore(){
         super("Clothing Store");
 
         JPanel cardPanel = new JPanel(new CardLayout());
@@ -15,7 +15,8 @@ public class View extends JFrame{
         cardPanel.add(new CustomerModel(cardPanel), "customers");
         cardPanel.add(new SalesRepModel(cardPanel), "salesRep");
         cardPanel.add(new BranchModel(cardPanel), "branch");
-        cardPanel.add(new SalesTransactionModel(this, cardPanel), "salesTransaction");
+        //cardPanel.add(new ReportsPanel(cardPanel), "reports");
+        cardPanel.add(new BranchModel(cardPanel), "branch");
        
         this.add(cardPanel, BorderLayout.CENTER);
         

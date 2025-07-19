@@ -3,12 +3,6 @@ import java.awt.*;
 import java.sql.*;
 
 public class CustomerModel extends JPanel {
-    // Database credentials
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
-
     // UI Texts
     final public String opening = "Customer Record Management";
     final public String b1Text = "View All Customers";
@@ -25,12 +19,6 @@ public class CustomerModel extends JPanel {
     final private JPanel cardPanel;
 
     public CustomerModel(JPanel cardPanel) {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
 
         this.cardPanel = cardPanel;
         //setTitle("Customer Record");
@@ -188,7 +176,7 @@ public class CustomerModel extends JPanel {
                        "FROM Customer WHERE first_name = ? AND last_name = ?";
         
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn =  DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             stmt.setString(1, firstName);
             stmt.setString(2, lastName);
@@ -212,7 +200,7 @@ public class CustomerModel extends JPanel {
                        "ORDER BY s.sale_date DESC";
         
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn =  DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             stmt.setString(1, firstName);
             stmt.setString(2, lastName);
@@ -225,7 +213,7 @@ public class CustomerModel extends JPanel {
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn =  DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {

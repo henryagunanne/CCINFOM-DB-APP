@@ -42,10 +42,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;*/
 
 public class ProductModel extends JPanel{
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "Product Records Management";
     final public String b1Text = "View Product Records";
@@ -62,12 +58,6 @@ public class ProductModel extends JPanel{
     final private JPanel cardPanel;
 
     public ProductModel(JPanel cardPanel){
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
 
         this.cardPanel = cardPanel;
         // super("Product Records");
@@ -158,7 +148,7 @@ public class ProductModel extends JPanel{
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {
@@ -242,7 +232,7 @@ public class ProductModel extends JPanel{
                                     "WHERE p.product_name = ?";
 
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn =  DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(getCustomerQuery);
             stmt.setString(1, product);
             return stmt.executeQuery();  // caller must handle closing
@@ -388,7 +378,7 @@ public class ProductModel extends JPanel{
         String updateReturnItemsQuery = "INSERT INTO ReturnItems (return_item_id, return_id, product_id, quantity_returned) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity_returned = quantity_returned + VALUES(quantity_returned)";
 
 
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+        try (Connection conn =  DBConnection.getConnection()) {
             conn.setAutoCommit(false); // Start transaction
             
             try (PreparedStatement getSaleIdStmt = conn.prepareStatement(getSaleIdQuery);
@@ -533,7 +523,7 @@ public class ProductModel extends JPanel{
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(this, "An error occurred while processing return: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 return false;
-            }
+            } 
         }catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -614,7 +604,7 @@ public class ProductModel extends JPanel{
         String updateInventoryQuery = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
         String updateRestockQuery = "INSERT INTO Restock VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+        try (Connection conn =  DBConnection.getConnection()) {
             conn.setAutoCommit(false); // Start transaction
 
             try (PreparedStatement getBranchIdStmt = conn.prepareStatement(getBranchIdQuery);

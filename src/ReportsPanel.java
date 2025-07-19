@@ -3,12 +3,8 @@ import java.awt.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
-
+ 
 public class ReportsPanel extends JPanel {
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
 
     final public String opening = "Reports Management";
     final public String b1Text = "Monthly Sales Report";
@@ -41,7 +37,7 @@ public class ReportsPanel extends JPanel {
         mainPanel.add(reportsMenuPanel, "reportsMenu");
         
         // Add the main panel to this panel
-        add(mainPanel, BorderLayout.CENTER);
+        this.add(mainPanel, BorderLayout.CENTER);
         
         // Show the reports menu initially
         cardLayout.show(mainPanel, "reportsMenu");
@@ -80,7 +76,10 @@ public class ReportsPanel extends JPanel {
         btn2.addActionListener(e -> showSalesRepReport());
         btn3.addActionListener(e -> showProductPerformanceReport());
         btn4.addActionListener(e -> showRevenueBranchReport());
-        prevBtn.addActionListener(e -> mainApp.showPanel("MainMenu"));
+        prevBtn.addActionListener(e -> {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -130,7 +129,7 @@ public class ReportsPanel extends JPanel {
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {
@@ -217,7 +216,7 @@ public class ReportsPanel extends JPanel {
         // In a real implementation, this would query the database
         // For now, we'll return sample data
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
             // Create a temporary table with sample data
@@ -314,7 +313,7 @@ public class ReportsPanel extends JPanel {
         // In a real implementation, this would query the database
         // For now, we'll return sample data
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
             // Create a temporary table with sample data
@@ -413,7 +412,7 @@ public class ReportsPanel extends JPanel {
         // In a real implementation, this would query the database
         // For now, we'll return sample data
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
             // Create a temporary table with sample data
@@ -518,7 +517,7 @@ public class ReportsPanel extends JPanel {
         // In a real implementation, this would query the database
         // For now, we'll return sample data
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
             // Create a temporary table with sample data

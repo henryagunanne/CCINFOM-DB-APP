@@ -31,19 +31,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;*/
 
 public class DisplayData {
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
-    
-    static {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
 
+    
     private final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
     
@@ -144,7 +133,7 @@ public class DisplayData {
     }
 
     public String[] getComboBoxData(String query) {
-        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 

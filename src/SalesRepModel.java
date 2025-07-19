@@ -1,12 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
-
+ 
 public class SalesRepModel extends JPanel {
-    final private String DRIVER = "com.mysql.cj.jdbc.Driver";
-    final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
-    final private String USERNAME = "root";
-    final private String PASSWORD = "AGUnanne1";
 
     final public String opening = "Sales Representative Records Management";
     final public String b1Text = "View Sales Representatives";
@@ -21,12 +17,7 @@ public class SalesRepModel extends JPanel {
     final private JPanel cardPanel;
 
     public SalesRepModel(JPanel cardPanel) {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
+
         this.cardPanel = cardPanel;
         //setTitle("Sales Representative Records");
         setLayout(new BorderLayout());
@@ -174,7 +165,7 @@ public class SalesRepModel extends JPanel {
 
     private ResultSet executeQuery(String query) {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             return stmt.executeQuery(query);
         } catch (SQLException e) {
