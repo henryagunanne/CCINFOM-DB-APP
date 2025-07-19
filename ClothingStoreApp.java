@@ -9,6 +9,7 @@ public class ClothingStoreApp extends JFrame {
     private SalesRepPanel salesRepPanel;
     private SalesTransactionPanel salesTransactionPanel;
     private CustomerPanel customerPanel;
+    private ReportsPanel reportsPanel;
     
     public ClothingStoreApp() {
         super("Clothing Store Management System");
@@ -27,6 +28,7 @@ public class ClothingStoreApp extends JFrame {
         salesRepPanel = new SalesRepPanel(this);
         salesTransactionPanel = new SalesTransactionPanel(this);
         customerPanel = new CustomerPanel(this);
+        reportsPanel = new ReportsPanel(this);
         
         // Add panels to the content panel
         contentPanel.add(mainMenuPanel, "MainMenu");
@@ -35,6 +37,7 @@ public class ClothingStoreApp extends JFrame {
         contentPanel.add(salesRepPanel, "SalesRep");
         contentPanel.add(salesTransactionPanel, "SalesTransaction");
         contentPanel.add(customerPanel, "Customer");
+        contentPanel.add(reportsPanel, "Reports");
         add(contentPanel);
         
         showPanel("MainMenu");
