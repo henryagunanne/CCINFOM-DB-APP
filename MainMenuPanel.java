@@ -1,6 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-
+//
 public class MainMenuPanel extends JPanel {
     final public String opening = "Clothing Store Record Management System";
     final public String b1Text = "Product Record Management";
