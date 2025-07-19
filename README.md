@@ -231,7 +231,7 @@ Operations:
    </td>
    <td>Total sales amount per sales rep, grouped by branch, for a selected month
    </td>
-   <td>Adriano Mark Luis
+   <td>Manatad, Francinne
    </td>
   </tr>
   <tr>
