@@ -14,3 +14,14 @@ SalesTransactionModel.class
 SalesTransactionModel$SaleItem.class
 View.class
 ProductModel.class
+BranchPanel.class
+ClothingStoreApp.class
+CustomerModel.class
+CustomerPanel.class
+MainMenuPanel.class
+ProductPanel.class
+ProductPanel$1.class
+ReportsPanel.class
+SalesRepPanel.class
+SalesTransactionPanel$SaleItem.class
+SalesTransactionPanel.class
