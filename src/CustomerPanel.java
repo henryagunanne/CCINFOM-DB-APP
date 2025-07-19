@@ -219,12 +219,12 @@ public class CustomerPanel extends JPanel {
     private ResultSet getCustomerPurchases(int customerId) {
         String query = 
             "SELECT s.sale_date, p.product_name, si.quantity_ordered, si.unit_price, " +
-            "(si.quantity_ordered * si.unit_price) AS SUBTOTAL" +
+            "(si.quantity_ordered * si.unit_price) AS SUBTOTAL " +
             "\nFROM Sales s " +
             "\nJOIN Salesitems si ON s.sales_id = si.sale_id " +
             "\nJOIN Product p ON si.product_id = p.product_id " +
             "\nWHERE s.customer_id = " + customerId +
-            "\nORDER BY s.sale_date DESC;";
+            "\n ORDER BY s.sale_date DESC;";
         return executeQuery(query);
     }
 
