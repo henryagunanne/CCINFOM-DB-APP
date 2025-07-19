@@ -23,7 +23,7 @@ Conversion notes:
 
 **        CCINFOM DATABASE APPLICATION PROPOSAL**
 
-**Clothing Store Inventory and Sales Management System**
+# Clothing Store Inventory and Sales Management System
 
 
 ### **Section 1.0 Group Composition**
