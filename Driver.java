@@ -17,6 +17,9 @@ import java.io.File;
  * javac -cp ".:mysql-connector-j-9.3.0.jar" *.java
  * java -cp ".:mysql-connector-j-9.3.0.jar" Driver
  */
+import java.io.File;
+import java.io.IOException;
+
 public class Driver { 
     public static void main(String[] args) {
         try {
@@ -29,19 +32,12 @@ public class Driver {
             System.out.println("\nAttempting to run " + scriptName + " automatically...\n");
             
             try {
-                File script = new File(scriptName);
-                if (!script.exists()) {
-                    System.out.println("Error: " + scriptName + " not found!");
-                    return;
-                }
-                if (!isWindows) {
-                    Runtime.getRuntime().exec("chmod +x " + scriptName).waitFor();
-                }
-                String command = isWindows ? scriptName : "." + File.separator + scriptName;
-                Process process = Runtime.getRuntime().exec(command);
-                
+                ProcessBuilder pb = new ProcessBuilder(scriptName);
+                pb.inheritIO(); // Forward output to current console
+                Process process = pb.start();
+                process.waitFor();
                 System.exit(0);
-            } catch (Exception ex) {
+            } catch (IOException | InterruptedException ex) {
                 System.out.println("Failed to run script automatically. Please run manually:\n");
                 System.out.println(isWindows ? "run.bat" : "./run.sh");
             }
