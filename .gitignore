@@ -23,3 +23,9 @@ BranchPanel.class
 ClothingStoreApp.class
 CustomerModel.class
 CustomerPanel.class
+src/RestockPanel.class
+src/RestockPanel$1.class
+src/RestockPanel$2.class
+src/RestockPanel$3.class
+src/RestockPanel$RestockItem.class
+src/DBConnection.class
