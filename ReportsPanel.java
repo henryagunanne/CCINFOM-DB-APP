@@ -9,7 +9,7 @@ public class ReportsPanel extends JPanel {
     private final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private final String URL = "jdbc:mysql://localhost:3306/DBclothing";
     private final String USERNAME = "root";
-    private final String PASSWORD = "imagentumr1@";
+    private final String PASSWORD = "root";
     
     private ClothingStoreApp mainApp;
     private CardLayout cardLayout = new CardLayout();
