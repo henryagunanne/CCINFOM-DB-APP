@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.sql.*;
+import java.util.Map;
+import java.util.HashMap;
 // import java.time.*;
 // import java.time.format.DateTimeFormatter;
 
@@ -9,7 +11,7 @@ public class ProductPanel extends JPanel {
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "root";
 
     final public String opening = "Product Records Management";
     final public String b1Text = "View Product Records";
@@ -523,11 +525,5 @@ public class ProductPanel extends JPanel {
 
         mainPanel.add(restockPanel, "restockProduct");
         cardLayout.show(mainPanel, "restockProduct");
-    }
-
-    private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost) {
-        // Implementation remains the same as in ProductModel
-        // This is a placeholder to avoid making this file too long
-        return true; // Replace with actual implementation
     }
 }
