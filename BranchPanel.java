@@ -1,13 +1,15 @@
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class BranchPanel extends JPanel {
     // Database connection details
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "imagentumr1@";
+    final private String PASSWORD = "root";
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";
@@ -259,11 +261,5 @@ public class BranchPanel extends JPanel {
             e.printStackTrace();
             return null;
         }
-    }
-    
-    private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
-        // Implementation remains the same as in BranchModel
-        // This is a placeholder to avoid making this file too long
-        return true; // Replace with actual implementation
     }
 }
