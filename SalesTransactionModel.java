@@ -591,4 +591,15 @@ public class SalesTransactionModel extends JPanel {
             this.unitPrice = unitPrice;
         }
     }
+
+    private ResultSet executeQuery(String query) {
+        try {
+            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            return stmt.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

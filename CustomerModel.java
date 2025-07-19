@@ -2,12 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
-public class CustomerModel extends JFrame {
+public class CustomerModel extends JPanel {
     // Database credentials
     final private String DRIVER = "com.mysql.cj.jdbc.Driver";
     final private String URL = "jdbc:mysql://localhost:3306/DBclothing";
     final private String USERNAME = "root";
-    final private String PASSWORD = "root";
+    final private String PASSWORD = "AGUnanne1";
 
     // UI Texts
     final public String opening = "Customer Record Management";
@@ -22,24 +22,29 @@ public class CustomerModel extends JFrame {
 
     private DisplayData displayData = new DisplayData();
     private JComboBox<String> customerComboBox;
+    final private JPanel cardPanel;
 
-    public CustomerModel() {
+    public CustomerModel(JPanel cardPanel) {
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "MySQL Driver not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-        setTitle("Customer Record");
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(800, 400);
-        setLocationRelativeTo(null);
+
+        this.cardPanel = cardPanel;
+        //setTitle("Customer Record");
+        //setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        //setSize(800, 400);
+        //setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         showMainMenu();
-        setVisible(true);
+        //setVisible(true);
     }
 
     private void showMainMenu() {
-        getContentPane().removeAll();
+        this.removeAll();
         
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -77,7 +82,10 @@ public class CustomerModel extends JFrame {
 
         btn2.addActionListener(e -> showCustomerSelection("details"));
         btn3.addActionListener(e -> showCustomerSelection("purchases"));
-        prevBtn.addActionListener(e -> new MainMenuGUI());
+        prevBtn.addActionListener(e ->  {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "mainMenu");
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -98,13 +106,13 @@ public class CustomerModel extends JFrame {
         gbc.gridy = 4;
         mainPanel.add(prevBtn, gbc);
 
-        getContentPane().add(mainPanel);
-        revalidate();
-        repaint();
+        this.add(mainPanel);
+        this.revalidate();
+        this.repaint();
     }
 
     private void showCustomerSelection(String action) {
-        getContentPane().removeAll();
+        this.removeAll();
         
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -162,9 +170,9 @@ public class CustomerModel extends JFrame {
         gbc.gridy = 3;
         panel.add(backBtn, gbc);
         
-        getContentPane().add(panel);
-        revalidate();
-        repaint();
+        this.add(panel);
+        this.revalidate();
+        this.repaint();
     }
 
     private ResultSet getAllCustomers() {

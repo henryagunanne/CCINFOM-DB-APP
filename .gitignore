@@ -27,3 +27,4 @@ SalesTransactionModel.class
 SalesTransactionModel$SaleItem.class
 View.class
 ProductModel.class
+CustomerModel.class

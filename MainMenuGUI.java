@@ -76,8 +76,12 @@ public class MainMenuGUI extends JPanel{
             CardLayout cl = (CardLayout) cardPanel.getLayout();
             cl.show(cardPanel, "products");
         });
-        //TODO: edit the action listeners for the buttons below
-        // btn2.addActionListener(e -> );
+        
+        btn2.addActionListener(e ->  {
+            CardLayout cl = (CardLayout) cardPanel.getLayout();
+            cl.show(cardPanel, "customers");
+        });
+        
         btn3.addActionListener(e -> {
             CardLayout cl = (CardLayout) cardPanel.getLayout();
             cl.show(cardPanel, "salesRep");
