@@ -34,6 +34,9 @@ public class SalesTransactionPanel extends JPanel {
     
     private ClothingStoreApp mainApp;
 
+    // track inventory
+    private Map<String, Map<String, Integer>> branchInventory = new HashMap<>();
+
     public SalesTransactionPanel(ClothingStoreApp app) {
         this.mainApp = app;
         setLayout(new BorderLayout());
@@ -54,6 +57,28 @@ public class SalesTransactionPanel extends JPanel {
 
         add(cardPanel, BorderLayout.CENTER);
         cardLayout.show(cardPanel, "CUSTOMER");
+
+        loadInventory();
+    }
+
+    // load inventory
+    private void loadInventory() {
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Inventory")) {
+            
+            while (rs.next()) {
+                String branch = rs.getString("branch_code");
+                int productId = rs.getInt("product_id");
+                int quantity = rs.getInt("quantity");
+                
+                branchInventory
+                    .computeIfAbsent(branch, k -> new HashMap<>())
+                    .put(String.valueOf(productId), quantity);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private JPanel createCustomerPanel() {
@@ -451,6 +476,7 @@ public class SalesTransactionPanel extends JPanel {
             // create sale items
             for (SaleItem item : saleItems) {
                 createSaleItem(conn, salesId, item);
+                updateInventory(conn, branchCode, item.productName, -item.quantity);
             }
             
             conn.commit();
@@ -460,6 +486,33 @@ public class SalesTransactionPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Error completing sale: " + e.getMessage(), 
                                           "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // update inventory in database
+    private void updateInventory(Connection conn, String branch, String productName, int delta) 
+        throws SQLException {
+        
+        // product ID
+        int productId = -1;
+        try (PreparedStatement stmt = conn.prepareStatement(
+            "SELECT product_id FROM product WHERE product_name = ?")) {
+            stmt.setString(1, productName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) productId = rs.getInt(1);
+        }
+
+        // update database
+        try (PreparedStatement stmt = conn.prepareStatement(
+            "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?")) {
+            stmt.setInt(1, delta);
+            stmt.setString(2, branch);
+            stmt.setInt(3, productId);
+            stmt.executeUpdate();
+        }
+
+        // update local cache
+        branchInventory.get(branch)
+            .merge(String.valueOf(productId), delta, Integer::sum);
     }
     
     private int createSaleRecord(Connection conn) throws SQLException {
