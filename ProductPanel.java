@@ -27,24 +27,67 @@ public class ProductPanel extends JPanel {
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
+    // inventory update to restock
+    private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost) {
+        String sql = "UPDATE Inventory i " +
+                     "JOIN Branch b ON b.branch_code = i.branch_code " +
+                     "JOIN Product p ON p.product_id = i.product_id " +
+                     "SET i.quantity = i.quantity + ? " +
+                     "WHERE b.branch_name = ? AND p.product_name = ?";
+        
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setString(2, branchName);
+            stmt.setString(3, productName);
+            
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // inventory update to returns
+    private boolean processReturn(String branchCode, String saleDate, String productName, int quantity, String reason) {
+        String sql = "UPDATE Inventory i " +
+                     "JOIN Product p ON p.product_id = i.product_id " +
+                     "SET i.quantity = i.quantity + ? " +
+                     "WHERE i.branch_code = ? AND p.product_name = ?";
+        
+        try (Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setString(2, branchCode);
+            stmt.setString(3, productName);
+            
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public ProductPanel(ClothingStoreApp app) {
         this.mainApp = app;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         
-        // Create a panel with CardLayout to switch between different product views
+        // switch between different product views
         mainPanel = new JPanel();
         cardLayout = new CardLayout();
         mainPanel.setLayout(cardLayout);
         
-        // Create and add the product menu panel
+        // create and add product menu panel
         JPanel productMenuPanel = createProductMenuPanel();
         mainPanel.add(productMenuPanel, "productMenu");
         
-        // Add the main panel to this panel
+        // add main panel to this panel
         add(mainPanel, BorderLayout.CENTER);
         
-        // Show the product menu initially
+        // show product menu initially
         cardLayout.show(mainPanel, "productMenu");
     }
 
