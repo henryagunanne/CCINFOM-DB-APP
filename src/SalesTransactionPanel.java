@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SalesTransactionPanel extends JPanel {
+    // Using centralized database connection
+
     private JPanel cardPanel;
     private CardLayout cardLayout;
     private List<SaleItem> saleItems;

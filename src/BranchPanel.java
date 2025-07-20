@@ -3,7 +3,7 @@ import java.awt.*;
 import java.sql.*;
 
 public class BranchPanel extends JPanel {
-    // Database connection handled by DBConnection class
+    // Using centralized database connection
 
     final public String opening = "What do you want to do?";
     final public String b1Text = "Check Branch Records";

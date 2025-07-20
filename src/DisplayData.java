@@ -1,12 +1,11 @@
-// Simplified the imports
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DisplayData {
-    private final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
     
     public void displayData(JFrame parent, ResultSet rs, String titleText, ActionListener backAction) {
@@ -35,21 +34,37 @@ public class DisplayData {
     
     public JTable createTableFromResultSet(ResultSet rs) {
         try {
+            if (rs == null) {
+                return new JTable(new Object[][]{{"", "No data available"}}, new Object[]{"", "Message"});
+            }
+            
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             
             String[] columnNames = new String[columnCount];
             for (int i = 1; i <= columnCount; i++) {
-                columnNames[i-1] = metaData.getColumnName(i);
+                columnNames[i-1] = metaData.getColumnLabel(i);
             }
             
-            java.util.List<Object[]> data = new java.util.ArrayList<>();
+            // Reset cursor position with rs.beforeFirst() before reading data
+            rs.beforeFirst();
+            
+            List<Object[]> data = new ArrayList<>();
+            boolean hasData = false;
+            
             while (rs.next()) {
+                hasData = true;
                 Object[] row = new Object[columnCount];
                 for (int i = 1; i <= columnCount; i++) {
                     row[i-1] = rs.getObject(i);
                 }
                 data.add(row);
+            }
+            
+            // If no data was found, return a message table
+            if (!hasData) {
+                return new JTable(new Object[][]{{"", "No data available for the selected period"}}, 
+                                 new Object[]{"", "Message"});
             }
             
             Object[][] dataArray = data.toArray(new Object[0][]);
@@ -106,11 +121,12 @@ public class DisplayData {
     }
 
     public String[] getComboBoxData(String query) {
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
 
-            java.util.List<String> dataList = new java.util.ArrayList<>();
+            List<String> dataList = new ArrayList<>();
             while (rs.next()) {
                 dataList.add(rs.getString(1));
             }
@@ -118,16 +134,13 @@ public class DisplayData {
             return dataList.toArray(new String[0]);
         } catch (SQLException e) {
             e.printStackTrace();
-            
             return new String[0];
         }
     }
 
-
     public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
                                  JComboBox<String> returnItem, JTextField quantityField, JTextField reasonField, 
-                                 ActionListener submitAction, ActionListener backAction){
-
+                                 ActionListener submitAction, ActionListener backAction) {
         parent.getContentPane().removeAll();
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -183,10 +196,9 @@ public class DisplayData {
         parent.repaint();
     }
 
-
     public void showRestockProducts(JFrame parent, JComboBox<String> branchName, JComboBox<String> productName, 
                                     JComboBox<String> supplier, JTextField quantityField, JLabel costLabel, 
-                                    ActionListener submitAction, ActionListener backAction){
+                                    ActionListener submitAction, ActionListener backAction) {
         parent.getContentPane().removeAll();
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -216,7 +228,7 @@ public class DisplayData {
         gbc.gridx = 1; gbc.gridy = 5; panel.add(costLabel, gbc);
 
         JPanel buttonPanel = new JPanel();
-        JButton submitBtn = new JButton("Submit Return");
+        JButton submitBtn = new JButton("Submit Restock");
         submitBtn.setBackground(Color.decode("#008000"));
         submitBtn.setForeground(Color.WHITE);
         submitBtn.setOpaque(true);
@@ -242,5 +254,3 @@ public class DisplayData {
         parent.repaint();
     }
 }
-
-

@@ -3,7 +3,7 @@ import java.awt.*;
 import java.sql.*;
 
 public class SalesRepPanel extends JPanel {
-    // Database connection handled by DBConnection class
+    // Using centralized database connection
 
     final public String opening = "Sales Representative Records Management";
     final public String b1Text = "View Sales Representatives";
