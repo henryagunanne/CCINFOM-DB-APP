@@ -1,43 +1,15 @@
-// Simplified the imports
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.sql.*;
-
-/*import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;*/
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DisplayData {
-
-    
-    private final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
     
-    public void displayData(JPanel parent, ResultSet rs, String titleText, ActionListener backAction) {
-        parent.removeAll();
+    public void displayData(JFrame parent, ResultSet rs, String titleText, ActionListener backAction) {
+        parent.getContentPane().removeAll();
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
         
@@ -55,28 +27,44 @@ public class DisplayData {
         backPanel.add(backButton);
         panel.add(backPanel, BorderLayout.SOUTH);
         
-        parent.add(panel, BorderLayout.CENTER);
+        parent.getContentPane().add(panel);
         parent.revalidate();
         parent.repaint();
     }
     
     public JTable createTableFromResultSet(ResultSet rs) {
         try {
+            if (rs == null) {
+                return new JTable(new Object[][]{{"", "No data available"}}, new Object[]{"", "Message"});
+            }
+            
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             
             String[] columnNames = new String[columnCount];
             for (int i = 1; i <= columnCount; i++) {
-                columnNames[i-1] = metaData.getColumnName(i);
+                columnNames[i-1] = metaData.getColumnLabel(i);
             }
             
-            java.util.List<Object[]> data = new java.util.ArrayList<>();
+            // Reset cursor position with rs.beforeFirst() before reading data
+            rs.beforeFirst();
+            
+            List<Object[]> data = new ArrayList<>();
+            boolean hasData = false;
+            
             while (rs.next()) {
+                hasData = true;
                 Object[] row = new Object[columnCount];
                 for (int i = 1; i <= columnCount; i++) {
                     row[i-1] = rs.getObject(i);
                 }
                 data.add(row);
+            }
+            
+            // If no data was found, return a message table
+            if (!hasData) {
+                return new JTable(new Object[][]{{"", "No data available for the selected period"}}, 
+                                 new Object[]{"", "Message"});
             }
             
             Object[][] dataArray = data.toArray(new Object[0][]);
@@ -87,10 +75,10 @@ public class DisplayData {
         }
     }
     
-    public void showStockTransfer(JPanel parent, JComboBox<String> sourceBranch, JComboBox<String> destBranch, 
+    public void showStockTransfer(JFrame parent, JComboBox<String> sourceBranch, JComboBox<String> destBranch, 
                                  JComboBox<String> productBox, JTextField quantityField, 
                                  ActionListener submitAction, ActionListener backAction) {
-        parent.removeAll();
+        parent.getContentPane().removeAll();
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
         
@@ -104,7 +92,7 @@ public class DisplayData {
         panel.add(transferTitle, gbc);
 
         gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Source Branch:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch Code:"), gbc);
         gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Destination Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Product:"), gbc);
         gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity:"), gbc);
@@ -127,17 +115,18 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.add(panel, BorderLayout.CENTER);
+        parent.getContentPane().add(panel);
         parent.revalidate();
         parent.repaint();
     }
 
     public String[] getComboBoxData(String query) {
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
 
-            java.util.List<String> dataList = new java.util.ArrayList<>();
+            List<String> dataList = new ArrayList<>();
             while (rs.next()) {
                 dataList.add(rs.getString(1));
             }
@@ -145,18 +134,15 @@ public class DisplayData {
             return dataList.toArray(new String[0]);
         } catch (SQLException e) {
             e.printStackTrace();
-            
             return new String[0];
         }
     }
 
+    public void showProcessReturn(JFrame parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
+                                 JComboBox<String> returnItem, JTextField quantityField, JTextField reasonField, 
+                                 ActionListener submitAction, ActionListener backAction) {
+        parent.getContentPane().removeAll();
 
-    public void showProcessReturn(JPanel parent, JComboBox<String> branchCode, JComboBox<String> saleDate, 
-                                 JComboBox<String> customerName, JLabel customerId, JComboBox<String> returnItem,
-                                 JTextField quantityField, JTextField reasonField, ActionListener submitAction, 
-                                 ActionListener backAction){
-
-        parent.removeAll();
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
 
@@ -172,20 +158,16 @@ public class DisplayData {
 
         gbc.gridwidth = 1;
         gbc.gridx = 0; gbc.gridy = 1; panel.add(new JLabel("Branch code:"), gbc);
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date: "), gbc);
-        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Customer Name: "), gbc);
-        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Customer ID: "), gbc);
-        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Item to return:"), gbc);
-        gbc.gridx = 0; gbc.gridy = 6; panel.add(new JLabel("Quantity to return :"), gbc);
-        gbc.gridx = 0; gbc.gridy = 7; panel.add(new JLabel("Reason :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2; panel.add(new JLabel("Sale date (YYYY-MM-DD): "), gbc);
+        gbc.gridx = 0; gbc.gridy = 3; panel.add(new JLabel("Item to return:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 4; panel.add(new JLabel("Quantity to return :"), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; panel.add(new JLabel("Reason :"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; panel.add(branchCode, gbc);
         gbc.gridx = 1; gbc.gridy = 2; panel.add(saleDate, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; panel.add(customerName, gbc);
-        gbc.gridx = 1; gbc.gridy = 4; panel.add(customerId, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; panel.add(returnItem, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; panel.add(quantityField, gbc);
-        gbc.gridx = 1; gbc.gridy = 7; panel.add(reasonField, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; panel.add(returnItem, gbc);
+        gbc.gridx = 1; gbc.gridy = 4; panel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; panel.add(reasonField, gbc);
 
         JPanel buttonPanel = new JPanel();
         JButton submitBtn = new JButton("Submit Return");
@@ -206,19 +188,19 @@ public class DisplayData {
         buttonPanel.add(submitBtn);
         buttonPanel.add(backBtn);
 
-        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.add(panel, BorderLayout.CENTER);
+        parent.getContentPane().add(panel);
         parent.revalidate();
         parent.repaint();
     }
 
-
-    public void showRestockProducts(JPanel parent, JComboBox<String> branchName, JComboBox<String> productName, 
+    public void showRestockProducts(JFrame parent, JComboBox<String> branchName, JComboBox<String> productName, 
                                     JComboBox<String> supplier, JTextField quantityField, JLabel costLabel, 
-                                    ActionListener submitAction, ActionListener backAction){
-        parent.removeAll();
+                                    ActionListener submitAction, ActionListener backAction) {
+        parent.getContentPane().removeAll();
+
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
 
@@ -246,7 +228,7 @@ public class DisplayData {
         gbc.gridx = 1; gbc.gridy = 5; panel.add(costLabel, gbc);
 
         JPanel buttonPanel = new JPanel();
-        JButton submitBtn = new JButton("Submit");
+        JButton submitBtn = new JButton("Submit Restock");
         submitBtn.setBackground(Color.decode("#008000"));
         submitBtn.setForeground(Color.WHITE);
         submitBtn.setOpaque(true);
@@ -267,10 +249,8 @@ public class DisplayData {
         gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(buttonPanel, gbc);
 
-        parent.add(panel, BorderLayout.CENTER);
+        parent.getContentPane().add(panel);
         parent.revalidate();
         parent.repaint();
     }
 }
-
-

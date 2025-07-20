@@ -1,53 +1,52 @@
-
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.lang.management.ThreadInfo;
- 
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-public class MainMenuGUI extends JPanel{
+public class MainMenuGUI extends JFrame{
     final public String opening = "Clothing Store Record Management System";
     final public String b1Text = "Product Record Management";
     final public String b2Text = "Customer Record Management";
     final public String b3Text = "Sales Rep Record Management";
     final public String b4Text = "Branch Record Management";
     final public String b5Text = "New Sale";
-    final public String b6Text = "Reports";
 
     final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
     final Dimension buttonSize = new Dimension(350, 50);
 
-    final private JPanel cardPanel;
-
-    public MainMenuGUI(JPanel cardPanel){
-        //super("Clothing Store");
-        this.cardPanel = cardPanel;
-
+    public MainMenuGUI(){
+        super("Clothing Store");
         setBackground(Color.WHITE);
         setLayout(new BorderLayout());
-        //setSize(900, 500);
-        //setLocationRelativeTo(null);
-        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 400);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        
+        // Initialize database connection
+        DBConnection.initialize();
 
         mainMenu();
 
-        //setVisible(true);
+        setVisible(true);
+    }
+    
+    public static void main(String[] args) {
+        new MainMenuGUI();
     }
 
 
     private void mainMenu(){
-        this.removeAll();
+        this.getContentPane().removeAll();
 
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -60,51 +59,37 @@ public class MainMenuGUI extends JPanel{
         JButton btn3 = new JButton(b3Text);
         JButton btn4 = new JButton(b4Text);
         JButton btn5 = new JButton(b5Text);
-        JButton btn6 = new JButton(b6Text);
 
         btn1.setFont(font);
         btn2.setFont(font);
         btn3.setFont(font);
         btn4.setFont(font);
         btn5.setFont(font);
-        btn6.setFont(font);
 
         btn1.setPreferredSize(buttonSize);
         btn2.setPreferredSize(buttonSize);
         btn3.setPreferredSize(buttonSize);
         btn4.setPreferredSize(buttonSize);
         btn5.setPreferredSize(buttonSize);
-        btn6.setPreferredSize(buttonSize);
 
+        // Launch the main application with the appropriate panel
         btn1.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "products");
+            dispose();
+            new ClothingStoreApp("Product");
         });
-        
-        btn2.addActionListener(e ->  {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "customers");
+        btn2.addActionListener(e -> {
+            dispose();
+            new ClothingStoreApp("Customer");
         });
-        
         btn3.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "salesRep");
+            dispose();
+            new ClothingStoreApp("SalesRep");
         });
-
         btn4.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "branch");
+            dispose();
+            new ClothingStoreApp("Branch");
         });
-
-        btn5.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "salesTransaction");
-        });
-
-        btn6.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "reports");
-        });
+        btn5.addActionListener(e -> new SalesTransactionModel());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -128,7 +113,7 @@ public class MainMenuGUI extends JPanel{
         gbc.gridy = 6;
         mainPanel.add(btn5, gbc);
 
-        this.add(mainPanel, BorderLayout.CENTER);
+        this.getContentPane().add(mainPanel);
         this.revalidate();
         this.repaint();
     }

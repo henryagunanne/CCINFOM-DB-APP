@@ -2,13 +2,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 import java.time.*;
-import java.util.*;
- 
-public class ReportsPanel extends JPanel {
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.table.DefaultTableModel;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
 
+public class ReportsPanel extends JPanel {
     final public String opening = "Reports Management";
     final public String b1Text = "Monthly Sales Report";
-    final public String b2Text = "Sales per Sales Representative Report";
+    final public String b2Text = "Sales Representative Report";
     final public String b3Text = "Product Performance Report";
     final public String b4Text = "Revenue per Branch Report";
     final public String prevText = "Back";
@@ -18,12 +21,12 @@ public class ReportsPanel extends JPanel {
     final Dimension buttonSize = new Dimension(350, 50);
 
     private DisplayData displayData = new DisplayData();
-    final private JPanel cardPanel;
+    private ClothingStoreApp mainApp;
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
-    public ReportsPanel(JPanel cardPanel) {
-        this.cardPanel = cardPanel;
+    public ReportsPanel(ClothingStoreApp app) {
+        this.mainApp = app;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         
@@ -37,7 +40,7 @@ public class ReportsPanel extends JPanel {
         mainPanel.add(reportsMenuPanel, "reportsMenu");
         
         // Add the main panel to this panel
-        this.add(mainPanel, BorderLayout.CENTER);
+        add(mainPanel, BorderLayout.CENTER);
         
         // Show the reports menu initially
         cardLayout.show(mainPanel, "reportsMenu");
@@ -76,10 +79,7 @@ public class ReportsPanel extends JPanel {
         btn2.addActionListener(e -> showSalesRepReport());
         btn3.addActionListener(e -> showProductPerformanceReport());
         btn4.addActionListener(e -> showRevenueBranchReport());
-        prevBtn.addActionListener(e -> {
-            CardLayout cl = (CardLayout) cardPanel.getLayout();
-            cl.show(cardPanel, "mainMenu");
-        });
+        prevBtn.addActionListener(e -> mainApp.showPanel("MainMenu"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -114,11 +114,93 @@ public class ReportsPanel extends JPanel {
         dataTitle.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(dataTitle, BorderLayout.NORTH);
         
-        JTable table = displayData.createTableFromResultSet(rs);
+        JTable table = null;
+        try {
+            if (rs != null) {
+                // Create a DefaultTableModel to hold the data
+                DefaultTableModel model = new DefaultTableModel();
+                
+                // Get metadata
+                ResultSetMetaData metaData = rs.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                
+                // Add column headers
+                for (int i = 1; i <= columnCount; i++) {
+                    model.addColumn(metaData.getColumnLabel(i));
+                }
+                
+                // Add data rows
+                boolean hasData = false;
+                while (rs.next()) {
+                    hasData = true;
+                    Object[] row = new Object[columnCount];
+                    for (int i = 1; i <= columnCount; i++) {
+                        row[i-1] = rs.getObject(i);
+                    }
+                    model.addRow(row);
+                }
+                
+                if (hasData) {
+                    // Create table with data
+                    table = new JTable(model);
+                } else {
+                    // No data found
+                    DefaultTableModel emptyModel = new DefaultTableModel();
+                    emptyModel.addColumn("Message");
+                    emptyModel.addRow(new Object[]{"No data available for the selected period"});
+                    table = new JTable(emptyModel);
+                }
+            } else {
+                // Null result set
+                DefaultTableModel emptyModel = new DefaultTableModel();
+                emptyModel.addColumn("Message");
+                emptyModel.addRow(new Object[]{"No data available for the selected period"});
+                table = new JTable(emptyModel);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error in createDataPanel: " + e.getMessage());
+            e.printStackTrace();
+            // Create empty table with error message
+            DefaultTableModel errorModel = new DefaultTableModel();
+            errorModel.addColumn("Error");
+            errorModel.addRow(new Object[]{"Error retrieving data: " + e.getMessage()});
+            table = new JTable(errorModel);
+        }
+        
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
         
         JButton backButton = new JButton("Back");
+        backButton.setFont(font);
+        backButton.setBackground(Color.decode("#880808"));
+        backButton.setForeground(Color.WHITE);
+        backButton.setOpaque(true);
+        backButton.setBorderPainted(false);
+        backButton.addActionListener(e -> cardLayout.show(mainPanel, "reportsMenu"));
+        JPanel backPanel = new JPanel();
+        backPanel.add(backButton);
+        panel.add(backPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createDataPanelWithTable(JTable table, String title) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        
+        JLabel dataTitle = new JLabel(title, SwingConstants.CENTER);
+        dataTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(dataTitle, BorderLayout.NORTH);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        JButton backButton = new JButton("Back");
+        backButton.setFont(font);
+        backButton.setBackground(Color.decode("#880808"));
+        backButton.setForeground(Color.WHITE);
+        backButton.setOpaque(true);
+        backButton.setBorderPainted(false);
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "reportsMenu"));
         JPanel backPanel = new JPanel();
         backPanel.add(backButton);
@@ -127,16 +209,6 @@ public class ReportsPanel extends JPanel {
         return panel;
     }
 
-    private ResultSet executeQuery(String query) {
-        try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            return stmt.executeQuery(query);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     // Monthly Sales Report
     private void showMonthlySalesReport() {
@@ -175,16 +247,11 @@ public class ReportsPanel extends JPanel {
             int month = monthCombo.getSelectedIndex() + 1;
             int year = (Integer) yearCombo.getSelectedItem();
             
-            ResultSet rs = generateMonthlySalesReport(month, year);
-            if (rs != null) {
-                JPanel dataPanel = createDataPanel(rs, 
-                    "Monthly Sales Report - " + monthCombo.getSelectedItem() + " " + year);
-                mainPanel.add(dataPanel, "monthlySalesData");
-                cardLayout.show(mainPanel, "monthlySalesData");
-            } else {
-                JOptionPane.showMessageDialog(this, "No data available for the selected period.", 
-                    "Information", JOptionPane.INFORMATION_MESSAGE);
-            }
+            JTable resultTable = generateMonthlySalesReportTable(month, year);
+            JPanel dataPanel = createDataPanelWithTable(resultTable, 
+                "Monthly Sales Report - " + monthCombo.getSelectedItem() + " " + year);
+            mainPanel.add(dataPanel, "monthlySalesData");
+            cardLayout.show(mainPanel, "monthlySalesData");
         });
 
         centerPanel.add(monthLabel);
@@ -212,37 +279,103 @@ public class ReportsPanel extends JPanel {
         cardLayout.show(mainPanel, "monthlySalesReport");
     }
 
-    private ResultSet generateMonthlySalesReport(int month, int year) {
-        // In a real implementation, this would query the database
-        // For now, we'll return sample data
+    private JTable generateMonthlySalesReportTable(int month, int year) {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            conn = DBConnection.getConnection();
+            if (conn == null) {
+                System.err.println("Database connection is null");
+                return createErrorTable("Database connection failed");
+            }
             
-            // Create a temporary table with sample data
-            stmt.execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_monthly_sales (" +
-                         "day INT, category VARCHAR(50), product VARCHAR(50), quantity INT, amount DECIMAL(10,2))");
+            // Create table model with column headers
+            DefaultTableModel model = new DefaultTableModel();
+            model.addColumn("Day");
+            model.addColumn("Category");
+            model.addColumn("Total Quantity");
+            model.addColumn("Total Amount");
             
-            // Clear any existing data
-            stmt.execute("DELETE FROM temp_monthly_sales");
+            String query = "SELECT DAY(s.sale_date) as day, p.category, " +
+                          "SUM(si.quantity_ordered) as total_quantity, " +
+                          "SUM(si.quantity_ordered * si.unit_price) as total_amount " +
+                          "FROM Sales s " +
+                          "JOIN SalesItems si ON si.sale_id = s.sales_id " +
+                          "JOIN Product p ON si.product_id = p.product_id " +
+                          "WHERE MONTH(s.sale_date) = " + month + " AND YEAR(s.sale_date) = " + year + " " +
+                          "GROUP BY DAY(s.sale_date), p.category " +
+                          "ORDER BY day, p.category";
             
-            // Insert sample data
-            stmt.execute("INSERT INTO temp_monthly_sales VALUES " +
-                         "(1, 'Tops', 'T-Shirt', 5, 125.00), " +
-                         "(1, 'Bottoms', 'Jeans', 3, 210.00), " +
-                         "(2, 'Tops', 'Sweater', 2, 150.00), " +
-                         "(2, 'Outerwear', 'Jacket', 1, 200.00), " +
-                         "(3, 'Dresses', 'Summer Dress', 4, 320.00)");
+            System.out.println("Executing query: " + query);
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(query);
             
-            // Query the temporary table
-            return stmt.executeQuery("SELECT day, category, SUM(quantity) as total_quantity, " +
-                                    "SUM(amount) as total_amount FROM temp_monthly_sales " +
-                                    "GROUP BY day, category ORDER BY day, category");
+            // Add data rows from the query result
+            boolean hasData = false;
+            while (rs.next()) {
+                hasData = true;
+                int day = rs.getInt("day");
+                String category = rs.getString("category");
+                int quantity = rs.getInt("total_quantity");
+                double amount = rs.getDouble("total_amount");
+                model.addRow(new Object[]{day, category, quantity, amount});
+            }
+            
+            System.out.println("Query executed successfully. Has data: " + hasData);
+            
+            // If no data found, add a message row
+            if (!hasData) {
+                // Check if there's any data in the Sales table for the selected month/year
+                String checkQuery = "SELECT COUNT(*) FROM Sales WHERE MONTH(sale_date) = " + month + " AND YEAR(sale_date) = " + year;
+                Statement checkStmt = conn.createStatement();
+                ResultSet checkRs = checkStmt.executeQuery(checkQuery);
+                checkRs.next();
+                int count = checkRs.getInt(1);
+                checkRs.close();
+                checkStmt.close();
+                
+                if (count == 0) {
+                    // No sales data for this period
+                    model.addRow(new Object[]{0, "No sales data for " + month + "/" + year, 0, 0.0});
+                } else {
+                    // There are sales but no category data
+                    model.addRow(new Object[]{0, "Data issue: Sales exist but no category data", 0, 0.0});
+                }
+            }
+            
+            return new JTable(model);
         } catch (SQLException e) {
+            System.err.println("SQL Error in generateMonthlySalesReport: " + e.getMessage());
             e.printStackTrace();
-            return null;
+            
+            // Create error message table
+            DefaultTableModel errorModel = new DefaultTableModel();
+            errorModel.addColumn("Error");
+            errorModel.addColumn("Message");
+            errorModel.addColumn("");
+            errorModel.addColumn("");
+            errorModel.addRow(new Object[]{"Database Error", e.getMessage(), "", ""});
+            return new JTable(errorModel);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
+    
+    private JTable createErrorTable(String message) {
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("Message");
+        model.addRow(new Object[]{message});
+        return new JTable(model);
+    }
+    // }
 
     // Sales per Sales Representative Report
     private void showSalesRepReport() {
@@ -273,17 +406,13 @@ public class ReportsPanel extends JPanel {
 
         generateBtn.addActionListener(e -> {
             int month = monthCombo.getSelectedIndex() + 1;
+            int year = LocalDate.now().getYear();
             
-            ResultSet rs = generateSalesRepReport(month);
-            if (rs != null) {
-                JPanel dataPanel = createDataPanel(rs, 
-                    "Sales per Rep Report - " + monthCombo.getSelectedItem());
-                mainPanel.add(dataPanel, "salesRepData");
-                cardLayout.show(mainPanel, "salesRepData");
-            } else {
-                JOptionPane.showMessageDialog(this, "No data available for the selected period.", 
-                    "Information", JOptionPane.INFORMATION_MESSAGE);
-            }
+            JTable resultTable = generateSalesRepReportTable(month, year);
+            JPanel dataPanel = createDataPanelWithTable(resultTable, 
+                "Sales per Rep Report - " + monthCombo.getSelectedItem() + " " + year);
+            mainPanel.add(dataPanel, "salesRepData");
+            cardLayout.show(mainPanel, "salesRepData");
         });
 
         centerPanel.add(monthLabel);
@@ -309,34 +438,83 @@ public class ReportsPanel extends JPanel {
         cardLayout.show(mainPanel, "salesRepReport");
     }
 
-    private ResultSet generateSalesRepReport(int month) {
-        // In a real implementation, this would query the database
-        // For now, we'll return sample data
+    private JTable generateSalesRepReportTable(int month, int year) {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            conn = DBConnection.getConnection();
+            if (conn == null) {
+                System.err.println("Database connection is null");
+                return createErrorTable("Database connection failed");
+            }
             
-            // Create a temporary table with sample data
-            stmt.execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_sales_rep (" +
-                         "sales_rep VARCHAR(50), branch VARCHAR(50), total_sales DECIMAL(10,2))");
+            // Create table model with column headers
+            DefaultTableModel model = new DefaultTableModel();
+            model.addColumn("Sales Rep");
+            model.addColumn("Branch");
+            model.addColumn("Total Sales");
             
-            // Clear any existing data
-            stmt.execute("DELETE FROM temp_sales_rep");
+            // Query to get sales rep data from the database
+            String query = "SELECT sr.name AS sales_rep, b.branch_name AS branch, " +
+                          "SUM(s.total_amount) AS total_sales " +
+                          "FROM Sales s " +
+                          "JOIN SalesRep sr ON s.sales_rep_id = sr.sales_rep_id " +
+                          "JOIN Branch b ON s.branch_code = b.branch_code " +
+                          "WHERE MONTH(s.sale_date) = " + month + " AND YEAR(s.sale_date) = " + year + " " +
+                          "GROUP BY sr.name, b.branch_name " +
+                          "ORDER BY b.branch_name, total_sales DESC";
             
-            // Insert sample data
-            stmt.execute("INSERT INTO temp_sales_rep VALUES " +
-                         "('John Smith', 'Main Branch', 5250.00), " +
-                         "('Jane Doe', 'Main Branch', 3750.00), " +
-                         "('Mike Johnson', 'Downtown', 4200.00), " +
-                         "('Sarah Williams', 'Downtown', 3900.00), " +
-                         "('Robert Brown', 'Uptown', 4800.00)");
+            System.out.println("Executing query: " + query);
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(query);
             
-            // Query the temporary table
-            return stmt.executeQuery("SELECT sales_rep, branch, total_sales FROM temp_sales_rep " +
-                                    "ORDER BY branch, total_sales DESC");
+            // Add data rows from the query result
+            boolean hasData = false;
+            while (rs.next()) {
+                hasData = true;
+                String salesRep = rs.getString("sales_rep");
+                String branch = rs.getString("branch");
+                double totalSales = rs.getDouble("total_sales");
+                model.addRow(new Object[]{salesRep, branch, totalSales});
+            }
+            
+            System.out.println("Query executed successfully. Has data: " + hasData);
+            
+            // If no data found, add a message row
+            if (!hasData) {
+                // Check if there's any data in the Sales table for the selected month/year
+                String checkQuery = "SELECT COUNT(*) FROM Sales WHERE MONTH(sale_date) = " + month + " AND YEAR(sale_date) = " + year;
+                Statement checkStmt = conn.createStatement();
+                ResultSet checkRs = checkStmt.executeQuery(checkQuery);
+                checkRs.next();
+                int count = checkRs.getInt(1);
+                checkRs.close();
+                checkStmt.close();
+                
+                if (count == 0) {
+                    // No sales data for this period
+                    model.addRow(new Object[]{"No sales data for " + month + "/" + year, "", ""});
+                } else {
+                    // There are sales but no sales rep data
+                    model.addRow(new Object[]{"Data issue: Sales exist but no sales rep data", "", ""});
+                }
+            }
+            
+            return new JTable(model);
         } catch (SQLException e) {
+            System.err.println("SQL Error in generateSalesRepReport: " + e.getMessage());
             e.printStackTrace();
-            return null;
+            return createErrorTable("Error: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -409,31 +587,44 @@ public class ReportsPanel extends JPanel {
     }
 
     private ResultSet generateProductPerformanceReport(int quarter) {
-        // In a real implementation, this would query the database
-        // For now, we'll return sample data
         try {
             Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            if (conn == null) {
+                System.err.println("Database connection is null");
+                return null;
+            }
             
-            // Create a temporary table with sample data
-            stmt.execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_product_perf (" +
-                         "product VARCHAR(50), quantity_sold INT, revenue DECIMAL(10,2), avg_price DECIMAL(10,2))");
+            // Calculate start and end dates for the quarter
+            int currentYear = LocalDate.now().getYear();
+            int startMonth = (quarter - 1) * 3 + 1;
+            int endMonth = quarter * 3;
             
-            // Clear any existing data
-            stmt.execute("DELETE FROM temp_product_perf");
+            String startDate = currentYear + "-" + String.format("%02d", startMonth) + "-01";
+            String endDate = currentYear + "-" + String.format("%02d", endMonth) + "-31";
             
-            // Insert sample data
-            stmt.execute("INSERT INTO temp_product_perf VALUES " +
-                         "('T-Shirt', 120, 3000.00, 25.00), " +
-                         "('Jeans', 85, 5950.00, 70.00), " +
-                         "('Sweater', 65, 4875.00, 75.00), " +
-                         "('Jacket', 40, 8000.00, 200.00), " +
-                         "('Dress', 70, 5600.00, 80.00)");
+            String query = "SELECT " +
+                "p.product_name AS product, " +
+                "COALESCE(SUM(si.quantity_ordered), 0) AS quantity_sold, " +
+                "COALESCE(SUM(si.quantity_ordered * si.unit_price), 0) AS revenue, " +
+                "COALESCE(AVG(si.unit_price), 0) AS avg_price " +
+                "FROM Product p " +
+                "LEFT JOIN SalesItems si ON p.product_id = si.product_id " +
+                "LEFT JOIN Sales s ON si.sale_id = s.sales_id AND s.sale_date BETWEEN ? AND ? " +
+                "GROUP BY p.product_name " +
+                "ORDER BY revenue DESC";
             
-            // Query the temporary table
-            return stmt.executeQuery("SELECT product, quantity_sold, revenue, avg_price FROM temp_product_perf " +
-                                    "ORDER BY revenue DESC");
+            System.out.println("Executing query: " + query);
+            System.out.println("Date range: " + startDate + " to " + endDate);
+            
+            PreparedStatement stmt = conn.prepareStatement(query, 
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            stmt.setString(1, startDate);
+            stmt.setString(2, endDate);
+            ResultSet rs = stmt.executeQuery();
+            System.out.println("Query executed successfully");
+            return rs;
         } catch (SQLException e) {
+            System.err.println("SQL Error in generateProductPerformanceReport: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -514,30 +705,31 @@ public class ReportsPanel extends JPanel {
     }
 
     private ResultSet generateRevenueBranchReport(int month, int year) {
-        // In a real implementation, this would query the database
-        // For now, we'll return sample data
         try {
             Connection conn = DBConnection.getConnection();
+            if (conn == null) {
+                System.err.println("Database connection is null");
+                return null;
+            }
+            
             Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
-            // Create a temporary table with sample data
-            stmt.execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_branch_revenue (" +
-                         "branch VARCHAR(50), location VARCHAR(50), total_revenue DECIMAL(10,2))");
+            // Query actual branch data and sales from the database
+            String query = "SELECT b.branch_code, b.branch_name, b.location, " +
+                          "IFNULL((SELECT SUM(s.total_amount) " +
+                            "FROM Sales s " +
+                            "WHERE s.branch_code = b.branch_code " +
+                            "AND MONTH(s.sale_date) = " + month + " " +
+                            "AND YEAR(s.sale_date) = " + year + "), 0) AS revenue " +
+                          "FROM Branch b " +
+                          "ORDER BY revenue DESC";
             
-            // Clear any existing data
-            stmt.execute("DELETE FROM temp_branch_revenue");
-            
-            // Insert sample data
-            stmt.execute("INSERT INTO temp_branch_revenue VALUES " +
-                         "('Main Branch', 'Downtown', 25750.00), " +
-                         "('Uptown Store', 'Uptown', 18900.00), " +
-                         "('Mall Location', 'Westfield Mall', 22300.00), " +
-                         "('Airport Shop', 'International Airport', 12500.00)");
-            
-            // Query the temporary table
-            return stmt.executeQuery("SELECT branch, location, total_revenue FROM temp_branch_revenue " +
-                                    "ORDER BY total_revenue DESC");
+            System.out.println("Executing query: " + query);
+            ResultSet rs = stmt.executeQuery(query);
+            System.out.println("Query executed successfully");
+            return rs;
         } catch (SQLException e) {
+            System.err.println("SQL Error in generateRevenueBranchReport: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
