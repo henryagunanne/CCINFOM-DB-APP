@@ -163,6 +163,7 @@ public class RestockPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Error loading branches: " + e.getMessage(), 
                                          "Database Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
     
     private void loadSuppliers() {
         supplierComboBox.removeAllItems();
@@ -271,8 +272,7 @@ public class RestockPanel extends JPanel {
             return;
         }
         
-        try {
-            Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
             // Get selected branch code
@@ -311,52 +311,13 @@ public class RestockPanel extends JPanel {
                     pstmt.setDate(6, currentDate);
                     pstmt.executeUpdate();
                     
-                    // Update inventory for all branches
-                    Statement branchStmt = conn.createStatement();
-                    ResultSet branchRs = branchStmt.executeQuery("SELECT branch_code FROM Branch");
-                    
-                    while (branchRs.next()) {
-                        branchCode = branchRs.getString("branch_code");
-                        
-                        // Check if product exists in branch inventory
-                        PreparedStatement checkStmt = conn.prepareStatement(
-                            "SELECT COUNT(*) FROM Inventory WHERE product_id = ? AND branch_code = ?"
-                        );
-                        checkStmt.setInt(1, item.productId);
-                        checkStmt.setString(2, branchCode);
-                        ResultSet checkRs = checkStmt.executeQuery();
-                        checkRs.next();
-                        int count = checkRs.getInt(1);
-                        
-                        if (count > 0) {
-                            // Update existing inventory
-                            updateStmt.setInt(1, item.quantity);
-                            updateStmt.setInt(2, item.productId);
-                            updateStmt.setString(3, branchCode);
-                            updateStmt.executeUpdate();
-                        } else {
-                            // Insert new inventory record
-                            PreparedStatement insertStmt = conn.prepareStatement(
-                                "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?)"
-                            );
-                            insertStmt.setString(1, branchCode);
-                            insertStmt.setInt(2, item.productId);
-                            insertStmt.setInt(3, item.quantity);
-                            insertStmt.executeUpdate();
-                            insertStmt.close();
-                        }
-                        
-                        checkRs.close();
-                        checkStmt.close();
-                    }
-                    
                     branchRs.close();
                     branchStmt.close();
-                    
-                    nextRestockId++;
 
                     // Update inventory for specific branch
                     updateInventory(conn, branchCode, item.productId, item.quantity);
+
+                    nextRestockId++;
                 }
                 
                 conn.commit();
