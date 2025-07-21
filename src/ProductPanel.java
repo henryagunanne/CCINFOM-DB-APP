@@ -841,44 +841,46 @@ public class ProductPanel extends JPanel {
     private boolean processReturn(String branchCode, String saleDate, String productName, String reason, int quantity) {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false); // Start transaction
-            
+
             // Get the sale ID and product ID
-            String saleQuery = "SELECT s.sales_id, p.product_id, si.quantity_ordered, si.unit_price " +
-                              "FROM Sales s " +
-                              "JOIN SalesItems si ON s.sales_id = si.sale_id " +
-                              "JOIN Product p ON si.product_id = p.product_id " +
-                              "WHERE s.branch_code = ? AND DATE_FORMAT(s.sale_date, '%Y-%m-%d') = ? " +
-                              "AND p.product_name = ?";
+            String saleQuery = "SELECT s.sales_id, si.sale_item_id, p.product_id, "
+                             + "si.quantity_ordered, si.unit_price "
+                             + "FROM Sales s "
+                             + "JOIN SalesItems si ON s.sales_id = si.sale_id "
+                             + "JOIN Product p ON si.product_id = p.product_id "
+                             + "WHERE s.branch_code = ? AND DATE(s.sale_date) = ? "
+                             + "AND p.product_name = ?";
             
             try (PreparedStatement stmt = conn.prepareStatement(saleQuery)) {
                 stmt.setString(1, branchCode);
-                stmt.setString(2, saleDate);
+                stmt.setDate(2, Date.valueOf(saleDate));
                 stmt.setString(3, productName);
                 
                 ResultSet rs = stmt.executeQuery();
                 if (!rs.next()) {
-                    JOptionPane.showMessageDialog(this, "Sale record not found", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "No matching sale found", "Error", JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
                 
                 int saleId = rs.getInt("sales_id");
+                int saleItemId = rs.getInt("sale_item_id");
                 int productId = rs.getInt("product_id");
                 int quantityOrdered = rs.getInt("quantity_ordered");
                 double unitPrice = rs.getDouble("unit_price");
                 
                 // Check if return quantity is valid
                 if (quantity > quantityOrdered) {
-                    JOptionPane.showMessageDialog(this, "Cannot return more than ordered quantity: " + quantityOrdered, 
-                                                "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, 
+                        "Return quantity exceeds purchased quantity", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
                 
                 // Calculate refund amount
                 double refundAmount = quantity * unitPrice;
-                
-                // Update sales total amount
-                String updateSaleQuery = "UPDATE Sales SET total_amount = total_amount - ? WHERE sales_id = ?";
-                try (PreparedStatement updateStmt = conn.prepareStatement(updateSaleQuery)) {
+                String updateSale = "UPDATE Sales SET total_amount = total_amount - ? "
+                                 + "WHERE sales_id = ?";
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSale)) {
                     updateStmt.setDouble(1, refundAmount);
                     updateStmt.setInt(2, saleId);
                     updateStmt.executeUpdate();
@@ -886,73 +888,48 @@ public class ProductPanel extends JPanel {
                 
                 // Update sales item quantity or delete if all returned
                 if (quantity == quantityOrdered) {
-                    // Delete the sales item if all are returned
-                    String deleteSaleItemQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
-                    try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSaleItemQuery)) {
-                        deleteStmt.setInt(1, saleId);
-                        deleteStmt.setInt(2, productId);
-                        deleteStmt.executeUpdate();
+                    String deleteItem = "DELETE FROM SalesItems WHERE sale_item_id = ?";
+                    try (PreparedStatement delStmt = conn.prepareStatement(deleteItem)) {
+                        delStmt.setInt(1, saleItemId);
+                        delStmt.executeUpdate();
                     }
                 } else {
-                    // Update the quantity if partial return
-                    String updateSaleItemQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? " +
-                                                "WHERE sale_id = ? AND product_id = ?";
-                    try (PreparedStatement updateStmt = conn.prepareStatement(updateSaleItemQuery)) {
-                        updateStmt.setInt(1, quantity);
-                        updateStmt.setInt(2, saleId);
-                        updateStmt.setInt(3, productId);
+                    String updateItem = "UPDATE SalesItems SET quantity_ordered = ? "
+                                     + "WHERE sale_item_id = ?";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(updateItem)) {
+                        updateStmt.setInt(1, quantityOrdered - quantity);
+                        updateStmt.setInt(2, saleItemId);
                         updateStmt.executeUpdate();
                     }
+                }
+                
+                // Update inventory
+                String updateInventory = "UPDATE Inventory SET quantity = quantity + ? "
+                                      + "WHERE branch_code = ? AND product_id = ?";
+                try (PreparedStatement invStmt = conn.prepareStatement(updateInventory)) {
+                    invStmt.setInt(1, quantity);
+                    invStmt.setString(2, branchCode);
+                    invStmt.setInt(3, productId);
+                    invStmt.executeUpdate();
                 }
                 
                 // Record the return in Returns table
                 // First check if we need a new return_id
                 int returnId;
-                String getMaxReturnIdQuery = "SELECT COALESCE(MAX(return_id), 0) + 1 AS next_id FROM Returns";
+                int returnId;
                 try (Statement idStmt = conn.createStatement();
-                     ResultSet idRs = idStmt.executeQuery(getMaxReturnIdQuery)) {
+                     ResultSet idRs = idStmt.executeQuery("SELECT MAX(return_id) + 1 FROM Returns")) {
                     idRs.next();
-                    returnId = idRs.getInt("next_id");
+                    returnId = idRs.getInt(1);
                 }
                 
-                // Insert into Returns table
-                String insertReturnQuery = "INSERT INTO Returns (return_id, sale_id, return_date, reason) " +
-                                          "VALUES (?, ?, CURDATE(), ?)";
-                try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnQuery)) {
-                    insertStmt.setInt(1, returnId);
-                    insertStmt.setInt(2, saleId);
-                    insertStmt.setString(3, reason);
-                    insertStmt.executeUpdate();
-                }
-                
-                int returnItemId;
-                String getMaxReturnItemIdQuery = "SELECT COALESCE(MAX(return_item_id), 0) + 1 AS next_id FROM ReturnItems";
-                try (Statement idStmt2 = conn.createStatement();
-                    ResultSet idRs2 = idStmt2.executeQuery(getMaxReturnItemIdQuery)) {
-                    idRs2.next();
-                    returnItemId = idRs2.getInt("next_id");
-                }
-
-                // Insert into ReturnItems table
-                String insertReturnItemQuery = "INSERT INTO ReturnItems(return_id, product_id, quantity_returned) " +
-                                              "VALUES (?, ?, ?, ?)";
-                try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnItemQuery)) {
-                    insertStmt.setInt(1, returnItemId);
-                    insertStmt.setInt(2, returnId);
-                    insertStmt.setInt(3, productId);
-                    insertStmt.setInt(4, quantity);
-                    // insertStmt.setDouble(4, unitPrice);
-                    insertStmt.executeUpdate();
-                }
-                
-                // Update inventory
-                String updateInventoryQuery = "UPDATE Inventory SET quantity = quantity + ? " +
-                                             "WHERE branch_code = ? AND product_id = ?";
-                try (PreparedStatement updateStmt = conn.prepareStatement(updateInventoryQuery)) {
-                    updateStmt.setInt(1, quantity);
-                    updateStmt.setString(2, branchCode);
-                    updateStmt.setInt(3, productId);
-                    updateStmt.executeUpdate();
+                String insertReturn = "INSERT INTO Returns (return_id, sale_id, return_date, reason) "
+                                   + "VALUES (?, ?, CURDATE(), ?)";
+                try (PreparedStatement retStmt = conn.prepareStatement(insertReturn)) {
+                    retStmt.setInt(1, returnId);
+                    retStmt.setInt(2, saleId);
+                    retStmt.setString(3, reason);
+                    retStmt.executeUpdate();
                 }
                 
                 conn.commit();
@@ -960,7 +937,9 @@ public class ProductPanel extends JPanel {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Database error: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
