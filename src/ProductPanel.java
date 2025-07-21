@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 // import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 // import java.awt.event.*;
 import java.sql.*;
 // import java.util.ArrayList;
@@ -336,6 +337,8 @@ public class ProductPanel extends JPanel {
         }
     }
 
+
+
     private void displayProcessReturn() {
         // Create the panel with GridBagLayout
         JPanel returnPanel = new JPanel(new GridBagLayout());
@@ -348,29 +351,56 @@ public class ProductPanel extends JPanel {
         // Create the form components
         JLabel branchLabel = new JLabel("Branch code:");
         JLabel dateLabel = new JLabel("Sale date (YYYY-MM-DD):");
+        JLabel customerLabel = new JLabel("Customer Name");
+        JLabel customerIdLabel = new JLabel("");
         JLabel itemLabel = new JLabel("Item to return:");
         JLabel quantityLabel = new JLabel("Quantity to return :");
         JLabel reasonLabel = new JLabel("Reason :");
         JLabel costLabel = new JLabel("Cost: ₱0.00");  // Initialize with 0
         
-        // Create branch code combo box from database
-        JComboBox<String> branchCode = new JComboBox<>();
-        try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT branch_code FROM Branch ORDER BY branch_code");
-            while (rs.next()) {
-                branchCode.addItem(rs.getString("branch_code"));
+        JComboBox<String> branchCode  = new JComboBox<>(displayData.getComboBoxData("SELECT branch_code FROM Branch ORDER BY branch_code"));
+        JComboBox<String> saleDate  = new JComboBox<>(displayData.getComboBoxData("SELECT sale_date FROM Sales ORDER BY sale_date ASC"));
+        JComboBox<String> customerName = new JComboBox<>();
+        JLabel customerId = new JLabel(" ");
+        JComboBox<String> returnItem = new JComboBox<>();
+
+        // Initial population
+        updateCustomerNameCombo(customerName, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem());
+
+        String initialName = (String) customerName.getSelectedItem();
+        updateCustomerIdLabel(customerId, initialName);
+
+        updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
+
+
+        // Update customerName and returnItem combos when date or branch is changed
+        ActionListener updateListener = e -> {
+            String selectedDate = (String) saleDate.getSelectedItem();
+            String selectedBranch = (String) branchCode.getSelectedItem();
+            updateCustomerNameCombo(customerName,selectedDate, selectedBranch);
+
+            String updatedName = (String) customerName.getSelectedItem();
+            updateCustomerIdLabel(customerId, updatedName);
+
+            updateReturnItemsCombo(returnItem, selectedDate, selectedBranch, customerId.getText());
+        };
+
+        saleDate.addActionListener(updateListener);
+        branchCode.addActionListener(updateListener);
+
+       
+        // Update customerId when customerName changes
+        customerName.addActionListener(e -> {
+            String name = (String) customerName.getSelectedItem();
+            
+            if (name != null) {
+                updateCustomerIdLabel(customerId, name);
+                updateReturnItemsCombo(returnItem, (String) saleDate.getSelectedItem(), (String) branchCode.getSelectedItem(), customerId.getText());
             }
-            rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            // Fallback to hardcoded values if there's an error
-            JOptionPane.showMessageDialog(this, "Error loading data from database", "Error", JOptionPane.ERROR_MESSAGE);
-            // branchCode.addItem("B001");
-            // branchCode.addItem("B002");
-            // branchCode.addItem("B003");
-        }
+        });
+
+        JTextField quantityField = new JTextField();
+        JTextField reasonField = new JTextField();
         
         // Create item combo box from database
         JComboBox<String> item = new JComboBox<>();
@@ -382,221 +412,46 @@ public class ProductPanel extends JPanel {
                 // double unitPrice = rs.getDouble("unit_price");
                 productPrices.put(rs.getString("product_name"), rs.getDouble("unit_price"));
             }
-            // Connection conn = DatabaseConnection.getConnection();
-            // Statement stmt = conn.createStatement();
-            // ResultSet rs = stmt.executeQuery("SELECT item_name FROM Item ORDER BY item_name");
-            // while (rs.next()) {
-            //     item.addItem(rs.getString("item_name"));
-            // }
-            // rs.close();
-            // stmt.close();
         } catch (SQLException ex) {
-            // Fallback to hardcoded values if there's an error
-            // item.addItem("T-Shirt");
             System.out.println("Error loading items from database: " + ex.getMessage());
         }
+    
         
-        // Create sale date combo box from database
-        JComboBox<String> saleDate = new JComboBox<>();
-        try {
-            Connection conn = DBConnection.getConnection();
-            // Use a simple query without DISTINCT to avoid SQL mode issues
-            String query = "SELECT sale_date FROM Sales";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-            
-            // Process dates in Java to avoid SQL errors
-            java.util.Set<String> uniqueDates = new java.util.TreeSet<>();
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-            
-            while (rs.next()) {
-                java.sql.Date date = rs.getDate("sale_date");
-                if (date != null) {
-                    uniqueDates.add(sdf.format(date));
-                }
-            }
-            
-            // Add unique dates to combo box
-            for (String date : uniqueDates) {
-                saleDate.addItem(date);
-            }
-            
-            rs.close();
-            stmt.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            // Try a different approach if there's an error
-            try {
-                Connection conn = DBConnection.getConnection();
-                // Try a query with explicit join syntax
-                String query = "SELECT s.sale_date FROM Sales s INNER JOIN SalesItems si ON s.sales_id = si.sale_id";
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(query);
-                
-                java.util.Set<String> uniqueDates = new java.util.TreeSet<>();
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                
-                while (rs.next()) {
-                    java.sql.Date date = rs.getDate("sale_date");
-                    if (date != null) {
-                        uniqueDates.add(sdf.format(date));
-                    }
-                }
-                
-                // Add unique dates to combo box
-                for (String date : uniqueDates) {
-                    saleDate.addItem(date);
-                }
-                
-                rs.close();
-                stmt.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-                saleDate.removeAllItems();
-                saleDate.addItem("Error loading dates");
-            }
-        }
+        quantityField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { updateCost(); }
+            public void removeUpdate(DocumentEvent e) { updateCost(); }
+            public void changedUpdate(DocumentEvent e) { updateCost(); }
         
-        // Create product combo box
-        JComboBox<String> returnItem = new JComboBox<>();
-        
-        // Update products when branch or sale date changes
-        java.awt.event.ActionListener updateProducts = e -> {
-            String selectedBranch = (String) branchCode.getSelectedItem();
-            String selectedDate = (String) saleDate.getSelectedItem();
-            
-            if (selectedBranch == null || selectedDate == null || selectedDate.equals("Error loading dates")) {
-                return;
-            }
-            
-            // Clear the combo box
-            returnItem.removeAllItems();
-            
-            try {
-                // Query the database for products sold on this date at this branch
-                Connection conn = DBConnection.getConnection();
-                String query = "SELECT DISTINCT p.product_name FROM Product p " +
-                              "JOIN SalesItems si ON p.product_id = si.product_id " +
-                              "JOIN Sales s ON si.sale_id = s.sales_id " +
-                              "WHERE s.branch_code = ? AND DATE_FORMAT(s.sale_date, '%Y-%m-%d') = ?";
-                
-                PreparedStatement stmt = conn.prepareStatement(query);
-                stmt.setString(1, selectedBranch);
-                stmt.setString(2, selectedDate);
-                ResultSet rs = stmt.executeQuery();
-                
-                boolean hasItems = false;
-                while (rs.next()) {
-                    returnItem.addItem(rs.getString("product_name"));
-                    hasItems = true;
-                }
-                
-                rs.close();
-                stmt.close();
-                
-                if (!hasItems) {
-                    // Query the database for all products that have sales records
-                    query = "SELECT DISTINCT p.product_name FROM Product p " +
-                           "JOIN SalesItems si ON p.product_id = si.product_id";
-                    stmt = conn.prepareStatement(query);
-                    rs = stmt.executeQuery();
-                    
-                    while (rs.next()) {
-                        returnItem.addItem(rs.getString("product_name"));
-                        hasItems = true;
-                    }
-                    
-                    rs.close();
-                    stmt.close();
-                    
-                    if (!hasItems) {
-                        returnItem.addItem("No products found");
-                    }
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                // Query the database for all products
+            private void updateCost() {
                 try {
-                    Connection conn = DBConnection.getConnection();
-                    String query = "SELECT product_name FROM Product";
-                    Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery(query);
+                    String product = (String) returnItem.getSelectedItem();
+                    if (product != null && !quantityField.getText().isEmpty()) {
+                        String unitPriceQuery = "SELECT unit_price FROM Product WHERE product_name = '" + product + "'";
                     
-                    boolean hasItems = false;
-                    while (rs.next()) {
-                        returnItem.addItem(rs.getString("product_name"));
-                        hasItems = true;
+                        double unitPrice = 0;
+                        try (ResultSet rs = executeQuery(unitPriceQuery)) {
+                            if (rs.next()) {
+                                unitPrice = rs.getDouble("unit_price");
+                            }
+                        }catch(SQLException e){
+                            e.printStackTrace();
+                        }
+
+                        int quantity = Integer.parseInt(quantityField.getText());
+                        double cost = unitPrice * quantity;
+                        costLabel.setText(String.format("Cost: ₱%.2f", cost));
                     }
                     
-                    rs.close();
-                    stmt.close();
-                    
-                    if (!hasItems) {
-                        returnItem.addItem("No products found");
-                    }
-                } catch (SQLException e2) {
-                    e2.printStackTrace();
-                    returnItem.addItem("No products found");
+                } catch (NumberFormatException ex) {
+                    costLabel.setText("Cost: ₱0.00"); // Reset or show error if input is invalid
                 }
-            }
-            
-            // Update cost based on the selected product
-            String selectedProduct = (String) returnItem.getSelectedItem();
-            if (selectedProduct != null && !selectedProduct.equals("No products found") ) {
-                try {
-                    double unitPrice = productPrices.get(selectedProduct);
-                    costLabel.setText(String.format("Cost: ₱%.2f", unitPrice));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    // Fallback to hardcoded values if there's an error
-                    JOptionPane.showMessageDialog(this, "Error loading data from database", "Error", JOptionPane.ERROR_MESSAGE);
-                    // if (selectedProduct.equals("MENS T-SHIRT")) {
-                    //     costLabel.setText("Cost: ₱400.00");
-                    // } else if (selectedProduct.equals("MENS LEVIS")) {
-                    //     costLabel.setText("Cost: ₱700.00");
-                    // } else {
-                    //     costLabel.setText("Cost: ₱0.00");
-                    // }
-                }
-            } else {
-                costLabel.setText("Cost: ₱0.00");
-            }
-        };
-        
-        // Update cost when product is selected
-        returnItem.addActionListener(e -> {
-            String selectedProduct = (String) returnItem.getSelectedItem();
-            if (selectedProduct != null && !selectedProduct.equals("No products found")) {
-                try {
-                    double unitPrice = productPrices.get(selectedProduct);
-                    costLabel.setText(String.format("Cost: ₱%.2f", unitPrice));
-                    //JOptionPane.showMessageDialog(this, "Error loading data from database", "Error", JOptionPane.ERROR_MESSAGE);
-                    // Fallback to hardcoded values if there's an error
-                    // if (selectedProduct.equals("MENS T-SHIRT")) {
-                    //     costLabel.setText("Cost: ₱400.00");
-                    // } else if (selectedProduct.equals("MENS LEVIS")) {
-                    //     costLabel.setText("Cost: ₱700.00");
-                    // } else {
-                    //     costLabel.setText("Cost: ₱0.00");
-                    // }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Error loading data from database", "Error", JOptionPane.ERROR_MESSAGE);
-                    costLabel.setText("Cost: ₱0.00");
-                }
-            } else {
-                costLabel.setText("Cost: ₱0.00");
             }
         });
-        
-        branchCode.addActionListener(updateProducts);
-        saleDate.addActionListener(updateProducts);
+   
         
         // Trigger the action listener to populate products for the initial selection
-        updateProducts.actionPerformed(null);
-        
-        JTextField quantityField = new JTextField(10);
-        JTextField reasonField = new JTextField(10);
+        updateListener.actionPerformed(null);
+    
         
         // Create the buttons
         JButton submitBtn = new JButton("Submit Return");
@@ -630,14 +485,23 @@ public class ProductPanel extends JPanel {
         
         gbc.gridy = 2;
         returnPanel.add(dateLabel, gbc);
-        
+
         gbc.gridy = 3;
-        returnPanel.add(itemLabel, gbc);
-        
+        returnPanel.add(customerLabel, gbc);
+
         gbc.gridy = 4;
-        returnPanel.add(quantityLabel, gbc);
+        returnPanel.add(customerIdLabel, gbc);
         
         gbc.gridy = 5;
+        returnPanel.add(itemLabel, gbc);
+        
+        gbc.gridy = 6;
+        returnPanel.add(quantityLabel, gbc);
+
+        gbc.gridy = 7;
+        returnPanel.add(costLabel, gbc);
+        
+        gbc.gridy = 8;
         returnPanel.add(reasonLabel, gbc);
         
         // Add the input components
@@ -648,14 +512,20 @@ public class ProductPanel extends JPanel {
         
         gbc.gridy = 2;
         returnPanel.add(saleDate, gbc);
-        
+
         gbc.gridy = 3;
-        returnPanel.add(returnItem, gbc);
-        
+        returnPanel.add(customerName, gbc);
+
         gbc.gridy = 4;
-        returnPanel.add(quantityField, gbc);
+        returnPanel.add(customerId, gbc);
         
         gbc.gridy = 5;
+        returnPanel.add(returnItem, gbc);
+        
+        gbc.gridy = 6;
+        returnPanel.add(quantityField, gbc);
+        
+        gbc.gridy = 8;
         returnPanel.add(reasonField, gbc);
         
         // Add the buttons
@@ -713,6 +583,56 @@ public class ProductPanel extends JPanel {
         mainPanel.add(returnPanel, "processReturn");
         cardLayout.show(mainPanel, "processReturn");
     }
+
+
+    // Helper method for return items comboBox update on user selection
+    private void updateCustomerNameCombo(JComboBox<String> customerName, String saleDate, String branchCode){
+        if (saleDate != null && branchCode != null) {
+            String customerNameQuery = "SELECT CONCAT(c.last_name, ' ', c.first_name) AS CustomerName " +
+                                        "FROM Customer c JOIN Sales s ON s.customer_id = c.customer_id " +
+                                        "WHERE s.sale_date = '" + saleDate + "' AND s.branch_code = '" + branchCode + "'";
+
+            String[] customers = displayData.getComboBoxData(customerNameQuery);
+            customerName.setModel(new DefaultComboBoxModel<>(customers));
+        }else { 
+            customerName.setModel(new DefaultComboBoxModel<>());
+        }
+    }
+
+
+   // Helper method to update customer ID label
+   private void updateCustomerIdLabel(JLabel customerIdLabel, String fullName) {
+    if (fullName != null && !fullName.isEmpty()) {
+        try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer WHERE CONCAT(last_name, ' ', first_name) = '" + fullName + "'")) {
+            if (rs.next()) {
+                customerIdLabel.setText(rs.getString("customer_id"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    } else {
+        customerIdLabel.setText("");
+    }
+}
+
+
+    // Helper method for return items comboBox update on user selection
+    private void updateReturnItemsCombo(JComboBox<String> returnItem, String saleDate, String branchCode, String customerId) {
+        if (saleDate != null && branchCode != null) {
+            String query = "SELECT DISTINCT p.product_name FROM Product p " +
+                           "JOIN SalesItems i ON i.product_id = p.product_id " +
+                           "JOIN Sales s ON s.sales_id = i.sales_id " +
+                           "WHERE s.sale_date = '" + saleDate + "' AND s.branch_code = '" + 
+                           branchCode + "' AND s.customer_id = '" + customerId + "'";
+
+            String[] items = displayData.getComboBoxData(query);
+            returnItem.setModel(new DefaultComboBoxModel<>(items));
+        } else {
+            returnItem.setModel(new DefaultComboBoxModel<>());
+        }
+    }
+    
+
 
     private void displayRestockProduct() {
         JPanel restockPanel = new JPanel(new GridBagLayout());
@@ -887,7 +807,7 @@ public class ProductPanel extends JPanel {
                 // Update sales item quantity or delete if all returned
                 if (quantity == quantityOrdered) {
                     // Delete the sales item if all are returned
-                    String deleteSaleItemQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
+                    String deleteSaleItemQuery = "DELETE FROM SalesItems WHERE sales_id = ? AND product_id = ?";
                     try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSaleItemQuery)) {
                         deleteStmt.setInt(1, saleId);
                         deleteStmt.setInt(2, productId);
@@ -916,12 +836,12 @@ public class ProductPanel extends JPanel {
                 }
                 
                 // Insert into Returns table
-                String insertReturnQuery = "INSERT INTO Returns (return_id, sale_id, return_date, reason) " +
-                                          "VALUES (?, ?, CURDATE(), ?)";
+                String insertReturnQuery = "INSERT INTO Returns (return_id, return_date, reason) " +
+                                          "VALUES (?, CURDATE(), ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnQuery)) {
                     insertStmt.setInt(1, returnId);
-                    insertStmt.setInt(2, saleId);
-                    insertStmt.setString(3, reason);
+                    //insertStmt.setInt(2, saleId);
+                    insertStmt.setString(2, reason);
                     insertStmt.executeUpdate();
                 }
                 
@@ -964,6 +884,8 @@ public class ProductPanel extends JPanel {
             return false;
         }
     }
+    
+
     
     private boolean restockProduct(String branchName, String productName, String supplier, int quantity, double cost) {
         try (Connection conn = DBConnection.getConnection()) {
