@@ -842,105 +842,99 @@ public class ProductPanel extends JPanel {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false); // Start transaction
 
-            // Get the sale ID and product ID
-            String saleQuery = "SELECT s.sales_id, si.sale_item_id, p.product_id, "
-                             + "si.quantity_ordered, si.unit_price "
-                             + "FROM Sales s "
-                             + "JOIN SalesItems si ON s.sales_id = si.sale_id "
-                             + "JOIN Product p ON si.product_id = p.product_id "
-                             + "WHERE s.branch_code = ? AND DATE(s.sale_date) = ? "
-                             + "AND p.product_name = ?";
+            // Get product ID
+            int productId = getProductId(conn, productName);
+
+            // Find the sale
+            String saleQuery = "SELECT s.sales_id, si.sale_item_id, si.quantity_ordered " +
+                               "FROM Sales s " +
+                               "JOIN SalesItems si ON s.sales_id = si.sale_id " +
+                               "WHERE s.branch_code = ? AND s.sale_date = ? AND si.product_id = ?";
+            int saleId = -1;
+            int saleItemId = -1;
+            int originalQty = 0;
             
             try (PreparedStatement stmt = conn.prepareStatement(saleQuery)) {
                 stmt.setString(1, branchCode);
                 stmt.setDate(2, Date.valueOf(saleDate));
-                stmt.setString(3, productName);
-                
+                stmt.setInt(3, productId);
                 ResultSet rs = stmt.executeQuery();
-                if (!rs.next()) {
-                    JOptionPane.showMessageDialog(this, "No matching sale found", "Error", JOptionPane.ERROR_MESSAGE);
-                    return false;
-                }
                 
-                int saleId = rs.getInt("sales_id");
-                int saleItemId = rs.getInt("sale_item_id");
-                int productId = rs.getInt("product_id");
-                int quantityOrdered = rs.getInt("quantity_ordered");
-                double unitPrice = rs.getDouble("unit_price");
-                
-                // Check if return quantity is valid
-                if (quantity > quantityOrdered) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Return quantity exceeds purchased quantity", 
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                    return false;
-                }
-                
-                // Calculate refund amount
-                double refundAmount = quantity * unitPrice;
-                String updateSale = "UPDATE Sales SET total_amount = total_amount - ? "
-                                 + "WHERE sales_id = ?";
-                try (PreparedStatement updateStmt = conn.prepareStatement(updateSale)) {
-                    updateStmt.setDouble(1, refundAmount);
-                    updateStmt.setInt(2, saleId);
-                    updateStmt.executeUpdate();
-                }
-                
-                // Update sales item quantity or delete if all returned
-                if (quantity == quantityOrdered) {
-                    String deleteItem = "DELETE FROM SalesItems WHERE sale_item_id = ?";
-                    try (PreparedStatement delStmt = conn.prepareStatement(deleteItem)) {
-                        delStmt.setInt(1, saleItemId);
-                        delStmt.executeUpdate();
-                    }
+                if (rs.next()) {
+                    saleId = rs.getInt("sales_id");
+                    saleItemId = rs.getInt("sale_item_id");
+                    originalQty = rs.getInt("quantity_ordered");
                 } else {
-                    String updateItem = "UPDATE SalesItems SET quantity_ordered = ? "
-                                     + "WHERE sale_item_id = ?";
-                    try (PreparedStatement updateStmt = conn.prepareStatement(updateItem)) {
-                        updateStmt.setInt(1, quantityOrdered - quantity);
-                        updateStmt.setInt(2, saleItemId);
-                        updateStmt.executeUpdate();
-                    }
+                    throw new SQLException("No matching sale found");
                 }
-                
-                // Update inventory
-                String updateInventory = "UPDATE Inventory SET quantity = quantity + ? "
-                                      + "WHERE branch_code = ? AND product_id = ?";
-                try (PreparedStatement invStmt = conn.prepareStatement(updateInventory)) {
-                    invStmt.setInt(1, quantity);
-                    invStmt.setString(2, branchCode);
-                    invStmt.setInt(3, productId);
-                    invStmt.executeUpdate();
-                }
-                
-                // Record the return in Returns table
-                // First check if we need a new return_id
-                int returnId;
-                int returnId;
-                try (Statement idStmt = conn.createStatement();
-                     ResultSet idRs = idStmt.executeQuery("SELECT MAX(return_id) + 1 FROM Returns")) {
-                    idRs.next();
-                    returnId = idRs.getInt(1);
-                }
-                
-                String insertReturn = "INSERT INTO Returns (return_id, sale_id, return_date, reason) "
-                                   + "VALUES (?, ?, CURDATE(), ?)";
-                try (PreparedStatement retStmt = conn.prepareStatement(insertReturn)) {
-                    retStmt.setInt(1, returnId);
-                    retStmt.setInt(2, saleId);
-                    retStmt.setString(3, reason);
-                    retStmt.executeUpdate();
-                }
-                
-                conn.commit();
-                return true;
             }
+            
+            // Check if return quantity is valid
+            if (quantity > originalQty) {
+                throw new SQLException("Return quantity exceeds purchased quantity");
+            }
+            
+            // Create return record
+            int returnId = getNextId(conn, "return_id", "Returns");
+            String returnSql = "INSERT INTO Returns (return_id, sale_id, return_date, reason) VALUES (?, ?, CURDATE(), ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(returnSql)) {
+                stmt.setInt(1, returnId);
+                stmt.setInt(2, saleId);
+                stmt.setString(3, reason);
+                stmt.executeUpdate();
+            }
+            
+            // Create return item
+            int returnItemId = getNextId(conn, "return_item_id", "ReturnItems");
+            String itemSql = "INSERT INTO ReturnItems (return_item_id, return_id, product_id, quantity_returned) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(itemSql)) {
+                stmt.setInt(1, returnItemId);
+                stmt.setInt(2, returnId);
+                stmt.setInt(3, productId);
+                stmt.setInt(4, quantity);
+                stmt.executeUpdate();
+            }
+            
+            // Update inventory
+            String inventorySql = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(inventorySql)) {
+                stmt.setInt(1, quantity);
+                stmt.setString(2, branchCode);
+                stmt.setInt(3, productId);
+                stmt.executeUpdate();
+            }
+            
+            conn.commit();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Database error: " + e.getMessage(), 
-                "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error processing return: " + e.getMessage(), 
+                                         "Database Error", JOptionPane.ERROR_MESSAGE);
             return false;
+        }
+    }
+
+    // These are helper methods
+    private int getProductId(Connection conn, String productName) throws SQLException {
+        String sql = "SELECT product_id FROM Product WHERE product_name = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, productName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("product_id");
+            }
+            throw new SQLException("Product not found: " + productName);
+        }
+    }
+    
+    private int getNextId(Connection conn, String idColumn, String table) throws SQLException {
+        String sql = "SELECT MAX(" + idColumn + ") + 1 FROM " + table;
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // First record
         }
     }
     
