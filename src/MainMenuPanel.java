@@ -9,7 +9,6 @@ public class MainMenuPanel extends JPanel {
     final public String b4Text = "Branch Record Management";
     final public String b5Text = "New Sales Transaction";
     final public String b6Text = "Reports";
-    final public String b7Text = "Restock Products";
 
     final Font font = new Font("Arial", Font.PLAIN, 20);
     final Font titleFont = new Font("Arial", Font.BOLD, 25);
@@ -35,7 +34,6 @@ public class MainMenuPanel extends JPanel {
         JButton btn4 = new JButton(b4Text);
         JButton btn5 = new JButton(b5Text);
         JButton btn6 = new JButton(b6Text);
-        JButton btn7 = new JButton(b7Text);
 
         btn1.setFont(font);
         btn2.setFont(font);
@@ -43,7 +41,6 @@ public class MainMenuPanel extends JPanel {
         btn4.setFont(font);
         btn5.setFont(font);
         btn6.setFont(font);
-        btn7.setFont(font);
 
         btn1.setPreferredSize(buttonSize);
         btn2.setPreferredSize(buttonSize);
@@ -51,7 +48,6 @@ public class MainMenuPanel extends JPanel {
         btn4.setPreferredSize(buttonSize);
         btn5.setPreferredSize(buttonSize);
         btn6.setPreferredSize(buttonSize);
-        btn7.setPreferredSize(buttonSize);
 
         btn1.addActionListener(e -> mainApp.showPanel("Product"));
         btn2.addActionListener(e -> mainApp.showPanel("Customer"));
@@ -59,7 +55,6 @@ public class MainMenuPanel extends JPanel {
         btn4.addActionListener(e -> mainApp.showPanel("Branch"));
         btn5.addActionListener(e -> mainApp.showPanel("SalesTransaction"));
         btn6.addActionListener(e -> mainApp.showPanel("Reports"));
-        btn7.addActionListener(e -> mainApp.showPanel("Restock"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -85,8 +80,5 @@ public class MainMenuPanel extends JPanel {
         
         gbc.gridy = 7;
         add(btn6, gbc);
-        
-        gbc.gridy = 8;
-        add(btn7, gbc);
     }
 }
