@@ -836,12 +836,12 @@ public class ProductPanel extends JPanel {
                 }
                 
                 // Insert into Returns table
-                String insertReturnQuery = "INSERT INTO Returns (return_id, return_date, reason) " +
-                                          "VALUES (?, CURDATE(), ?)";
+                String insertReturnQuery = "INSERT INTO Returns (return_id, sales_id, return_date, reason) " +
+                                          "VALUES (?, ?, CURDATE(), ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnQuery)) {
                     insertStmt.setInt(1, returnId);
-                    //insertStmt.setInt(2, saleId);
-                    insertStmt.setString(2, reason);
+                    insertStmt.setInt(2, saleId);
+                    insertStmt.setString(3, reason);
                     insertStmt.executeUpdate();
                 }
                 
@@ -854,7 +854,7 @@ public class ProductPanel extends JPanel {
                 }
 
                 // Insert into ReturnItems table
-                String insertReturnItemQuery = "INSERT INTO ReturnItems(return_id, product_id, quantity_returned) " +
+                String insertReturnItemQuery = "INSERT INTO ReturnItems(return_item_id, return_id, product_id, quantity_returned) " +
                                               "VALUES (?, ?, ?, ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnItemQuery)) {
                     insertStmt.setInt(1, returnItemId);
