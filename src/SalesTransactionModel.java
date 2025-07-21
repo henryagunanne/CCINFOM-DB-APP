@@ -148,7 +148,7 @@ public class SalesTransactionModel extends JPanel {
         JTextField firstNameField = new JTextField();
         JTextField lastNameField = new JTextField();
         JTextField emailField = new JTextField();
-        JTextField memberField = new JTextField();
+        JCheckBox memberCheck = new JCheckBox();
 
         dialog.add(new JLabel("First Name*:"));
         dialog.add(firstNameField);
@@ -156,26 +156,32 @@ public class SalesTransactionModel extends JPanel {
         dialog.add(lastNameField);
         dialog.add(new JLabel("Email*:"));
         dialog.add(emailField);
-        dialog.add(new JLabel("Member? [YES or NO]:"));
-        dialog.add(memberField);
+        dialog.add(new JLabel("Member?:"));
+        dialog.add(memberCheck);
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> {
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
             String email = emailField.getText().trim();
-            String member = memberField.getText().trim();
+            String member = "FALSE";
 
             if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Email are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
+            if(memberCheck.isSelected()){
+                member = "TRUE";
+            }
             
+            /* 
             if (member == null || member.equalsIgnoreCase("NO")){
                 member = "FALSE";
             }else if (member.equalsIgnoreCase("YES")){
                 member = "TRUE";
             }
+            */
 
             if (saveNewCustomer(firstName, lastName, member, email)) {
                 updateCustomerCombo();
@@ -193,7 +199,6 @@ public class SalesTransactionModel extends JPanel {
         dialog.add(buttonPanel);
 
         dialog.setVisible(true);
-        this.add(dialog);
     }
     
     private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email) {
