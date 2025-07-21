@@ -5,7 +5,7 @@ import java.sql.*;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
-
+ 
 public class SalesTransactionPanel extends JPanel {
     // Using centralized database connection
 
@@ -487,7 +487,7 @@ public class SalesTransactionPanel extends JPanel {
     }
     
     private void createSaleItem(Connection conn, int salesId, SaleItem item) throws SQLException {
-        String sql = "INSERT INTO salesitems (sale_id, product_id, quantity_ordered, unit_price) " +
+        String sql = "INSERT INTO SalesItems (sales_id, product_id, quantity_ordered, unit_price) " +
                      "VALUES (?, (SELECT product_id FROM product WHERE product_name = ?), ?, ?)";
         
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

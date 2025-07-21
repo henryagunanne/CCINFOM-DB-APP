@@ -298,7 +298,7 @@ public class ProductPanel extends JPanel {
                 String query = "SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) AS customer_name, " +
                               "si.unit_price, si.quantity_ordered, s.sale_date, b.branch_name " +
                               "FROM SalesItems si " +
-                              "JOIN Sales s ON s.sales_id = si.sale_id " +
+                              "JOIN Sales s ON s.sales_id = si.sales_id " +
                               "JOIN Customer c ON c.customer_id = s.customer_id " +
                               "JOIN Branch b ON b.branch_code = s.branch_code " +
                               "WHERE si.product_id = ? " +
@@ -317,7 +317,7 @@ public class ProductPanel extends JPanel {
                 String query = "SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) AS customer_name, " +
                               "si.unit_price, si.quantity_ordered, s.sale_date, b.branch_name " +
                               "FROM SalesItems si " +
-                              "JOIN Sales s ON s.sales_id = si.sale_id " +
+                              "JOIN Sales s ON s.sales_id = si.sales_id " +
                               "JOIN Customer c ON c.customer_id = s.customer_id " +
                               "JOIN Branch b ON b.branch_code = s.branch_code " +
                               "WHERE si.product_id = ? " +
@@ -399,9 +399,11 @@ public class ProductPanel extends JPanel {
         // Create sale date combo box from database
         JComboBox<String> saleDate = new JComboBox<>();
         try {
+            String selectedBranch = (String) branchCode.getSelectedItem();
+        
             Connection conn = DBConnection.getConnection();
             // Use a simple query without DISTINCT to avoid SQL mode issues
-            String query = "SELECT sale_date FROM Sales";
+            String query = "SELECT sale_date FROM Sales WHERE branch_code = '" + selectedBranch "'";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             
@@ -429,7 +431,7 @@ public class ProductPanel extends JPanel {
             try {
                 Connection conn = DBConnection.getConnection();
                 // Try a query with explicit join syntax
-                String query = "SELECT s.sale_date FROM Sales s INNER JOIN SalesItems si ON s.sales_id = si.sale_id";
+                String query = "SELECT s.sale_date FROM Sales s INNER JOIN SalesItems si ON s.sales_id = si.sales_id";
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(query);
                 
@@ -477,7 +479,7 @@ public class ProductPanel extends JPanel {
                 Connection conn = DBConnection.getConnection();
                 String query = "SELECT DISTINCT p.product_name FROM Product p " +
                               "JOIN SalesItems si ON p.product_id = si.product_id " +
-                              "JOIN Sales s ON si.sale_id = s.sales_id " +
+                              "JOIN Sales s ON si.sales_id = s.sales_id " +
                               "WHERE s.branch_code = ? AND DATE_FORMAT(s.sale_date, '%Y-%m-%d') = ?";
                 
                 PreparedStatement stmt = conn.prepareStatement(query);
@@ -845,7 +847,7 @@ public class ProductPanel extends JPanel {
             // Get the sale ID and product ID
             String saleQuery = "SELECT s.sales_id, p.product_id, si.quantity_ordered, si.unit_price " +
                               "FROM Sales s " +
-                              "JOIN SalesItems si ON s.sales_id = si.sale_id " +
+                              "JOIN SalesItems si ON s.sales_id = si.sales_id " +
                               "JOIN Product p ON si.product_id = p.product_id " +
                               "WHERE s.branch_code = ? AND DATE_FORMAT(s.sale_date, '%Y-%m-%d') = ? " +
                               "AND p.product_name = ?";
@@ -887,7 +889,7 @@ public class ProductPanel extends JPanel {
                 // Update sales item quantity or delete if all returned
                 if (quantity == quantityOrdered) {
                     // Delete the sales item if all are returned
-                    String deleteSaleItemQuery = "DELETE FROM SalesItems WHERE sale_id = ? AND product_id = ?";
+                    String deleteSaleItemQuery = "DELETE FROM SalesItems WHERE sales_id = ? AND product_id = ?";
                     try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSaleItemQuery)) {
                         deleteStmt.setInt(1, saleId);
                         deleteStmt.setInt(2, productId);
@@ -896,7 +898,7 @@ public class ProductPanel extends JPanel {
                 } else {
                     // Update the quantity if partial return
                     String updateSaleItemQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? " +
-                                                "WHERE sale_id = ? AND product_id = ?";
+                                                "WHERE sales_id = ? AND product_id = ?";
                     try (PreparedStatement updateStmt = conn.prepareStatement(updateSaleItemQuery)) {
                         updateStmt.setInt(1, quantity);
                         updateStmt.setInt(2, saleId);
@@ -916,7 +918,7 @@ public class ProductPanel extends JPanel {
                 }
                 
                 // Insert into Returns table
-                String insertReturnQuery = "INSERT INTO Returns (return_id, sale_id, return_date, reason) " +
+                String insertReturnQuery = "INSERT INTO Returns (return_id, sales_id, return_date, reason) " +
                                           "VALUES (?, ?, CURDATE(), ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertReturnQuery)) {
                     insertStmt.setInt(1, returnId);

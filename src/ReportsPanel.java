@@ -302,7 +302,7 @@ public class ReportsPanel extends JPanel {
                           "SUM(si.quantity_ordered) as total_quantity, " +
                           "SUM(si.quantity_ordered * si.unit_price) as total_amount " +
                           "FROM Sales s " +
-                          "JOIN SalesItems si ON si.sale_id = s.sales_id " +
+                          "JOIN SalesItems si ON si.sales_id = s.sales_id " +
                           "JOIN Product p ON si.product_id = p.product_id " +
                           "WHERE MONTH(s.sale_date) = " + month + " AND YEAR(s.sale_date) = " + year + " " +
                           "GROUP BY DAY(s.sale_date), p.category " +
@@ -609,7 +609,7 @@ public class ReportsPanel extends JPanel {
                 "COALESCE(AVG(si.unit_price), 0) AS avg_price " +
                 "FROM Product p " +
                 "LEFT JOIN SalesItems si ON p.product_id = si.product_id " +
-                "LEFT JOIN Sales s ON si.sale_id = s.sales_id AND s.sale_date BETWEEN ? AND ? " +
+                "LEFT JOIN Sales s ON si.sales_id = s.sales_id AND s.sale_date BETWEEN ? AND ? " +
                 "GROUP BY p.product_name " +
                 "ORDER BY revenue DESC";
             
