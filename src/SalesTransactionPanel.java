@@ -130,42 +130,50 @@ public class SalesTransactionPanel extends JPanel {
     }
 
     private void showNewCustomerDialog() {
-        JDialog dialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "New Customer", true);
+        JDialog dialog = new JDialog(view, "New Customer", true);
         dialog.setLayout(new GridLayout(6, 2, 10, 10));
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
 
         JTextField firstNameField = new JTextField();
         JTextField lastNameField = new JTextField();
-        JTextField contactField = new JTextField();
         JTextField emailField = new JTextField();
-        JTextField addressField = new JTextField();
+        JCheckBox memberCheck = new JCheckBox();
 
         dialog.add(new JLabel("First Name*:"));
         dialog.add(firstNameField);
         dialog.add(new JLabel("Last Name*:"));
         dialog.add(lastNameField);
-        dialog.add(new JLabel("Contact*:"));
-        dialog.add(contactField);
-        dialog.add(new JLabel("Email:"));
+        dialog.add(new JLabel("Email*:"));
         dialog.add(emailField);
-        dialog.add(new JLabel("Address:"));
-        dialog.add(addressField);
+        dialog.add(new JLabel("Member?:"));
+        dialog.add(memberCheck);
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> {
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
-            String contact = contactField.getText().trim();
             String email = emailField.getText().trim();
-            String address = addressField.getText().trim();
+            String member = "FALSE";
 
-            if (firstName.isEmpty() || lastName.isEmpty() || contact.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Contact are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Email are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if (saveNewCustomer(firstName, lastName, contact, email, address)) {
+            if(memberCheck.isSelected()){
+                member = "TRUE";
+            }
+            
+            /* 
+            if (member == null || member.equalsIgnoreCase("NO")){
+                member = "FALSE";
+            }else if (member.equalsIgnoreCase("YES")){
+                member = "TRUE";
+            }
+            */
+
+            if (saveNewCustomer(firstName, lastName, member, email)) {
                 updateCustomerCombo();
                 dialog.dispose();
             }
@@ -182,16 +190,22 @@ public class SalesTransactionPanel extends JPanel {
 
         dialog.setVisible(true);
     }
-
-    private boolean saveNewCustomer(String firstName, String lastName, String contact, String email, String address) {
-        String sql = "INSERT INTO customer (first_name, last_name, contact_number, email, address) VALUES (?, ?, ?, ?, ?)";
+    
+    private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email) {
+        String sql = "INSERT INTO customer (customer_id, first_name, last_name, email, isMember) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, firstName);
-            stmt.setString(2, lastName);
-            stmt.setString(3, contact);
+
+            int customerId = -1;
+            try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer ORDER BY customer_id DESC LIMIT 1")) {
+                customerId = rs.next() ? rs.getInt("customer_id") + 1 : 3000;    
+
+            }
+            stmt.setInt(1, customerId);
+            stmt.setString(2, firstName);
+            stmt.setString(3, lastName);
             stmt.setString(4, email);
-            stmt.setString(5, address);
+            stmt.setString(5, isMember);
             int rows = stmt.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
