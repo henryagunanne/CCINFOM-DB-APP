@@ -155,17 +155,13 @@ public class SalesTransactionPanel extends JPanel {
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
             String email = emailField.getText().trim();
-            String member = "FALSE";
+            String member = memberCheck.isSelected() ? "TRUE" : "FALSE";
 
             if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Email are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if(memberCheck.isSelected()){
-                member = "TRUE";
-            }
-            
             /* 
             if (member == null || member.equalsIgnoreCase("NO")){
                 member = "FALSE";
@@ -198,7 +194,7 @@ public class SalesTransactionPanel extends JPanel {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int customerId;
-            String idQuery = "SELECT COALESCE(MAX(customer_id), 0) + 1 AS next_id FROM Customer"
+            String idQuery = "SELECT COALESCE(MAX(customer_id), 0) + 1 AS next_id FROM Customer";
             try (Statement idStmt = conn.createStatement();
                 ResultSet idC = idStmt.executeQuery(idQuery)) {
                 idC.next();
