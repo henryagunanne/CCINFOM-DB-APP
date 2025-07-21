@@ -17,7 +17,7 @@ public class SalesTransactionPanel extends JPanel {
     private int salesRepId;
     private String branchCode;
     private String paymentType;
-    
+
     // UI Components
     private JComboBox<String> customerCombo;
     private JComboBox<String> salesRepCombo;
@@ -28,14 +28,14 @@ public class SalesTransactionPanel extends JPanel {
     private JComboBox<String> paymentCombo;
     private JLabel totalLabel;
     private JButton nextButtonProducts;
-    
+
     private ClothingStoreApp mainApp;
 
     public SalesTransactionPanel(ClothingStoreApp app) {
         this.mainApp = app;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
-        
+
         saleItems = new ArrayList<>();
         totalAmount = 0.0;
 
@@ -64,7 +64,7 @@ public class SalesTransactionPanel extends JPanel {
 
         JPanel centerPanel = new JPanel(new GridLayout(3, 1, 10, 10));
         centerPanel.setBackground(Color.WHITE);
-        
+
         // customer selection
         JPanel customerRow = new JPanel(new BorderLayout());
         customerCombo = new JComboBox<>(new DisplayData().getComboBoxData(
@@ -73,7 +73,7 @@ public class SalesTransactionPanel extends JPanel {
         customerCombo.setFont(new Font("Arial", Font.PLAIN, 18));
         customerRow.add(new JLabel("Customer:"), BorderLayout.WEST);
         customerRow.add(customerCombo, BorderLayout.CENTER);
-        
+
         JButton newCustomerBtn = new JButton("New Customer");
         newCustomerBtn.setFont(new Font("Arial", Font.PLAIN, 14));
         newCustomerBtn.addActionListener(e -> showNewCustomerDialog());
@@ -88,7 +88,7 @@ public class SalesTransactionPanel extends JPanel {
         memberCheck.setEnabled(false);
         memberRow.add(memberCheck);
         centerPanel.add(memberRow);
-        
+
         // check member status
         customerCombo.addActionListener(e -> {
             String selected = (String) customerCombo.getSelectedItem();
@@ -103,22 +103,22 @@ public class SalesTransactionPanel extends JPanel {
         // button w back and next
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.setBackground(Color.WHITE);
-        
+
         JButton backButton = new JButton("Back to Main Menu");
         backButton.setFont(new Font("Arial", Font.PLAIN, 18));
         backButton.addActionListener(e -> mainApp.showPanel("MainMenu"));
         buttonPanel.add(backButton, BorderLayout.WEST);
-        
+
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
         buttonPanel.add(nextButton, BorderLayout.EAST);
-        
+
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
-    
+
     private void showNewCustomerDialog() {
         JDialog dialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "New Customer", true);
         dialog.setLayout(new GridLayout(6, 2, 10, 10));
@@ -172,7 +172,7 @@ public class SalesTransactionPanel extends JPanel {
 
         dialog.setVisible(true);
     }
-    
+
     private boolean saveNewCustomer(String firstName, String lastName, String contact, String email, String address) {
         String sql = "INSERT INTO customer (first_name, last_name, contact_number, email, address) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -189,7 +189,7 @@ public class SalesTransactionPanel extends JPanel {
             return false;
         }
     }
-    
+
     private void updateCustomerCombo() {
         customerCombo.removeAllItems();
         String[] customers = new DisplayData().getComboBoxData(
@@ -199,7 +199,7 @@ public class SalesTransactionPanel extends JPanel {
             customerCombo.addItem(customer);
         }
     }
-    
+
     private boolean isMember(int customerId) {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
@@ -224,31 +224,31 @@ public class SalesTransactionPanel extends JPanel {
 
         JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         centerPanel.setBackground(Color.WHITE);
-        
+
         salesRepCombo = new JComboBox<>(new DisplayData().getComboBoxData(
             "SELECT CONCAT(sales_rep_id, ' - ', name) FROM salesrep"
         ));
         salesRepCombo.setFont(new Font("Arial", Font.PLAIN, 18));
-        
+
         branchCombo = new JComboBox<>(new DisplayData().getComboBoxData(
             "SELECT CONCAT(branch_code, ' - ', branch_name) FROM branch"
         ));
         branchCombo.setFont(new Font("Arial", Font.PLAIN, 18));
-        
+
         centerPanel.add(new JLabel("Sales Representative:"));
         centerPanel.add(salesRepCombo);
         centerPanel.add(new JLabel("Branch:"));
         centerPanel.add(branchCombo);
-        
+
         panel.add(centerPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(Color.WHITE);
-        
+
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
         prevButton.addActionListener(e -> cardLayout.show(cardPanel, "CUSTOMER"));
-        
+
         JButton nextButton = new JButton("Next");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButton.addActionListener(e -> {
@@ -259,7 +259,7 @@ public class SalesTransactionPanel extends JPanel {
             }
             cardLayout.show(cardPanel, "PRODUCTS");
         });
-        
+
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -278,25 +278,25 @@ public class SalesTransactionPanel extends JPanel {
 
         JPanel inputPanel = new JPanel(new GridLayout(1, 4, 10, 10));
         inputPanel.setBackground(Color.WHITE);
-        
+
         productCombo = new JComboBox<>(new DisplayData().getComboBoxData(
-        "SELECT CONCAT(product_id, ' - ', product_name, ' - ', size, ' - ', color) FROM product"
+            "SELECT product_name FROM product"
         ));
         productCombo.setFont(new Font("Arial", Font.PLAIN, 18));
-        
+
         quantityField = new JTextField();
         quantityField.setFont(new Font("Arial", Font.PLAIN, 18));
-        
+
         JButton addButton = new JButton("Add Product");
         addButton.setFont(new Font("Arial", Font.PLAIN, 18));
         addButton.addActionListener(e -> addProductToSale());
-        
+
         inputPanel.add(new JLabel("Product:"));
         inputPanel.add(productCombo);
         inputPanel.add(new JLabel("Quantity:"));
         inputPanel.add(quantityField);
         inputPanel.add(addButton);
-        
+
         panel.add(inputPanel, BorderLayout.NORTH);
 
         // table for items added
@@ -312,63 +312,59 @@ public class SalesTransactionPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(Color.WHITE);
-        
+
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
         prevButton.addActionListener(e -> cardLayout.show(cardPanel, "SALES_REP_BRANCH"));
-        
+
         nextButtonProducts = new JButton("Proceed to Payment");
         nextButtonProducts.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButtonProducts.setEnabled(false);
         nextButtonProducts.addActionListener(e -> cardLayout.show(cardPanel, "PAYMENT"));
-        
+
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButtonProducts);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
-    
+
     private void addProductToSale() {
         try {
-            String selected = (String) productCombo.getSelectedItem();
-            if (selected == null || selected.isEmpty()) {
+            String productName = (String) productCombo.getSelectedItem();
+            if (productName == null || productName.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please select a product", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            // extract product ID from selection
-            int productId = Integer.parseInt(selected.split(" - ")[0]);
             int quantity = Integer.parseInt(quantityField.getText());
-            
             if (quantity <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantity must be positive", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            double unitPrice = getProductPrice(productId);
+
+            double unitPrice = getProductPrice(productName);
             double subtotal = unitPrice * quantity;
-            
-            saleItems.add(new SaleItem(selected, quantity, unitPrice));  // store full description
+
+            saleItems.add(new SaleItem(productName, quantity, unitPrice));
             totalAmount += subtotal;
             updateItemsTable();
             updateProceedButton();
-            
+
             quantityField.setText("");
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Invalid quantity format", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private void updateProceedButton() {
         nextButtonProducts.setEnabled(!saleItems.isEmpty());
     }
-    
-    private double getProductPrice(int productId) {
+
+    private double getProductPrice(String productName) {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                 "SELECT unit_price FROM product WHERE product_id = ?")) {
-            stmt.setInt(1, productId);
+                 "SELECT unit_price FROM product WHERE product_name = ?")) {
+            stmt.setString(1, productName);
             ResultSet rs = stmt.executeQuery();
             return rs.next() ? rs.getDouble("unit_price") : 0.0;
         } catch (SQLException e) {
@@ -376,7 +372,7 @@ public class SalesTransactionPanel extends JPanel {
             return 0.0;
         }
     }
-    
+
     private void updateItemsTable() {
         Object[][] data = new Object[saleItems.size()][4];
         for (int i = 0; i < saleItems.size(); i++) {
@@ -404,27 +400,27 @@ public class SalesTransactionPanel extends JPanel {
 
         JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         centerPanel.setBackground(Color.WHITE);
-        
+
         paymentCombo = new JComboBox<>(new String[]{"Cash", "Credit Card", "Debit Card", "Online Payment"});
         paymentCombo.setFont(new Font("Arial", Font.PLAIN, 18));
-        
+
         centerPanel.add(new JLabel("Payment Type:"));
         centerPanel.add(paymentCombo);
         centerPanel.add(new JLabel("Total Amount:"));
-        
+
         JLabel totalDisplay = new JLabel(String.format("₱%.2f", totalAmount));
         totalDisplay.setFont(new Font("Arial", Font.BOLD, 18));
         centerPanel.add(totalDisplay);
-        
+
         panel.add(centerPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(Color.WHITE);
-        
+
         JButton prevButton = new JButton("Previous");
         prevButton.setFont(new Font("Arial", Font.PLAIN, 18));
         prevButton.addActionListener(e -> cardLayout.show(cardPanel, "PRODUCTS"));
-        
+
         JButton nextButton = new JButton("Complete Sale");
         nextButton.setFont(new Font("Arial", Font.PLAIN, 18));
         nextButton.addActionListener(e -> {
@@ -432,32 +428,32 @@ public class SalesTransactionPanel extends JPanel {
             cardLayout.show(cardPanel, "CONFIRMATION");
             completeSale();
         });
-        
+
         buttonPanel.add(prevButton);
         buttonPanel.add(nextButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
-    
+
     private void completeSale() {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-            
+
             // create sale record
             int salesId = createSaleRecord(conn);
-            
+
             if (salesId == -1) {
                 JOptionPane.showMessageDialog(this, "Failed to create sale record", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             // create sale items
             for (SaleItem item : saleItems) {
                 createSaleItem(conn, salesId, item);
                 updateInventory(conn, branchCode, item.productName, -item.quantity); // update inventory
             }
-            
+
             conn.commit();
             JOptionPane.showMessageDialog(this, "Sale completed successfully! Sales ID: " + salesId);
         } catch (SQLException e) {
@@ -490,20 +486,20 @@ public class SalesTransactionPanel extends JPanel {
             }
         }
     }
-    
+
     private int createSaleRecord(Connection conn) throws SQLException {
         String customerStr = (String) customerCombo.getSelectedItem();
         customerId = Integer.parseInt(customerStr.split(" - ")[0]);
-        
+
         String salesRepStr = (String) salesRepCombo.getSelectedItem();
         salesRepId = Integer.parseInt(salesRepStr.split(" - ")[0]);
-        
+
         String branchStr = (String) branchCombo.getSelectedItem();
         branchCode = branchStr.split(" - ")[0];
-        
+
         String sql = "INSERT INTO sales (customer_id, sales_rep_id, branch_code, sale_date, payment_type, total_amount) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
-        
+
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, customerId);
             stmt.setInt(2, salesRepId);
@@ -512,22 +508,19 @@ public class SalesTransactionPanel extends JPanel {
             stmt.setString(5, paymentType);
             stmt.setDouble(6, totalAmount);
             stmt.executeUpdate();
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             return rs.next() ? rs.getInt(1) : -1;
         }
     }
-    
+
     private void createSaleItem(Connection conn, int salesId, SaleItem item) throws SQLException {
-        // extract product ID from stored description
-        int productId = Integer.parseInt(item.productName.split(" - ")[0]);
-        
         String sql = "INSERT INTO salesitems (sale_id, product_id, quantity_ordered, unit_price) " +
-                     "VALUES (?, ?, ?, ?)";
-        
+                     "VALUES (?, (SELECT product_id FROM product WHERE product_name = ?), ?, ?)";
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, salesId);
-            stmt.setInt(2, productId);
+            stmt.setString(2, item.productName);
             stmt.setInt(3, item.quantity);
             stmt.setDouble(4, item.unitPrice);
             stmt.executeUpdate();
@@ -556,7 +549,7 @@ public class SalesTransactionPanel extends JPanel {
             cardLayout.show(cardPanel, "CUSTOMER");
             mainApp.showPanel("MainMenu");
         });
-        
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.add(closeButton);
