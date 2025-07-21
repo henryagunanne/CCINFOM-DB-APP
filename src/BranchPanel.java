@@ -326,5 +326,4 @@ public class BranchPanel extends JPanel {
             return false;
         }
     }
-    }
 }
