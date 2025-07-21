@@ -144,6 +144,7 @@ public class BranchPanel extends JPanel {
         destBranch = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM Branch ORDER BY branch_name"));
         productBox = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM Product ORDER BY product_name"));
         quantityField = new JTextField();
+        reasonField = new JTextField();
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -155,15 +156,17 @@ public class BranchPanel extends JPanel {
         transferPanel.add(transferTitle, gbc);
 
         gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 1; transferPanel.add(new JLabel("Branch Code:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; transferPanel.add(new JLabel("Source Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 2; transferPanel.add(new JLabel("Destination Branch:"), gbc);
         gbc.gridx = 0; gbc.gridy = 3; transferPanel.add(new JLabel("Product:"), gbc);
         gbc.gridx = 0; gbc.gridy = 4; transferPanel.add(new JLabel("Quantity:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 5; transferPanel.add(new JLabel("Reason:"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; transferPanel.add(sourceBranch, gbc);
         gbc.gridx = 1; gbc.gridy = 2; transferPanel.add(destBranch, gbc);
         gbc.gridx = 1; gbc.gridy = 3; transferPanel.add(productBox, gbc);
         gbc.gridx = 1; gbc.gridy = 4; transferPanel.add(quantityField, gbc);
+        gbc.gridx = 1; gbc.gridy = 5; transferPanel.add(reasonField, gbc);
 
         JPanel buttonPanel = new JPanel();
         JButton submitBtn = new JButton("Submit");
@@ -175,6 +178,7 @@ public class BranchPanel extends JPanel {
                 String dst = (String) destBranch.getSelectedItem();
                 String product = (String) productBox.getSelectedItem();
                 int qty = Integer.parseInt(quantityField.getText());
+                String reason = (String) reasonField.getText();
                 
                 if (src.equals(dst)) {
                     JOptionPane.showMessageDialog(this, "Source and Destination branches cannot be the same.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -183,10 +187,9 @@ public class BranchPanel extends JPanel {
                 
                 if (qty <= 0) throw new NumberFormatException();
 
-                if (transferStock(src, dst, product, qty)) {
+                if (transferStock(src, dst, product, qty, reason)) {
                     JOptionPane.showMessageDialog(this, "Stock transferred successfully!");
-                    showStockTransfer();
-                    //cardLayout.show(mainPanel, "branchMenu");
+                    cardLayout.show(mainPanel, "branchMenu");
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
