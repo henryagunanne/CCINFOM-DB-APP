@@ -403,7 +403,7 @@ public class ProductPanel extends JPanel {
         
             Connection conn = DBConnection.getConnection();
             // Use a simple query without DISTINCT to avoid SQL mode issues
-            String query = "SELECT sale_date FROM Sales WHERE branch_code = '" + selectedBranch "'";
+            String query = "SELECT sale_date FROM Sales WHERE branch_code = '" + selectedBranch + "'";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             
