@@ -11,6 +11,7 @@ public class RestockPanel extends JPanel {
     private ClothingStoreApp mainApp;
     private JComboBox<String> supplierComboBox;
     private JComboBox<String> productComboBox;
+    private JComboBox<String> branchComboBox;
     private JTextField quantityField;
     private JTextField costPriceField;
     private JTable restockTable;
@@ -47,50 +48,60 @@ public class RestockPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Branch selection
+        gbc.gridx = 0; 
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Branch:"), gbc);
+        
+        gbc.gridx = 1; 
+        gbc.gridy = 0;
+        branchComboBox = new JComboBox<>();
+        formPanel.add(branchComboBox, gbc);
         
         // Supplier selection
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         formPanel.add(new JLabel("Select Supplier:"), gbc);
         
         gbc.gridx = 1;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         supplierComboBox = new JComboBox<>();
         formPanel.add(supplierComboBox, gbc);
         
         // Product selection
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         formPanel.add(new JLabel("Select Product:"), gbc);
         
         gbc.gridx = 1;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         productComboBox = new JComboBox<>();
         formPanel.add(productComboBox, gbc);
         
         // Quantity
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         formPanel.add(new JLabel("Quantity:"), gbc);
         
         gbc.gridx = 1;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         quantityField = new JTextField(10);
         formPanel.add(quantityField, gbc);
         
         // Cost Price
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         formPanel.add(new JLabel("Cost Price:"), gbc);
         
         gbc.gridx = 1;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         costPriceField = new JTextField(10);
         formPanel.add(costPriceField, gbc);
         
         // Add button
         gbc.gridx = 1;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         addButton = new JButton("Add to Restock List");
         addButton.addActionListener(new ActionListener() {
             @Override
@@ -135,7 +146,23 @@ public class RestockPanel extends JPanel {
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         add(mainPanel, BorderLayout.CENTER);
+
+        // Load branches in constructor
+        loadBranches();
     }
+
+    private void loadBranches() {
+        branchComboBox.removeAllItems();
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT branch_name FROM Branch")) {
+            while (rs.next()) {
+                branchComboBox.addItem(rs.getString("branch_name"));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading branches: " + e.getMessage(), 
+                                         "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
     
     private void loadSuppliers() {
         supplierComboBox.removeAllItems();
@@ -247,6 +274,10 @@ public class RestockPanel extends JPanel {
         try {
             Connection conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
+
+            // Get selected branch code
+            String branchName = (String) branchComboBox.getSelectedItem();
+            String branchCode = getBranchCode(conn, branchName);
             
             try {
                 // Get next restock_id
@@ -323,6 +354,9 @@ public class RestockPanel extends JPanel {
                     branchStmt.close();
                     
                     nextRestockId++;
+
+                    // Update inventory for specific branch
+                    updateInventory(conn, branchCode, item.productId, item.quantity);
                 }
                 
                 conn.commit();
@@ -345,6 +379,42 @@ public class RestockPanel extends JPanel {
             
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Database connection error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Get branch code from name
+    private String getBranchCode(Connection conn, String branchName) throws SQLException {
+        String sql = "SELECT branch_code FROM Branch WHERE branch_name = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, branchName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("branch_code");
+            }
+            throw new SQLException("Branch not found: " + branchName);
+        }
+    }
+
+    // Update inventory method
+    private void updateInventory(Connection conn, String branchCode, int productId, int quantity) throws SQLException {
+        String sql = "UPDATE Inventory SET quantity = quantity + ? " +
+                     "WHERE branch_code = ? AND product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantity);
+            stmt.setString(2, branchCode);
+            stmt.setInt(3, productId);
+            int updated = stmt.executeUpdate();
+            
+            if (updated == 0) {
+                // Insert if record doesn't exist
+                String insertSql = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setString(1, branchCode);
+                    insertStmt.setInt(2, productId);
+                    insertStmt.setInt(3, quantity);
+                    insertStmt.executeUpdate();
+                }
+            }
         }
     }
     
