@@ -33,6 +33,7 @@ public class SalesTransactionPanel extends JPanel {
     private JButton nextButtonProducts;
 
     private ClothingStoreApp mainApp;
+    private DisplayData displayData = new DisplayData(); 
 
     public SalesTransactionPanel(ClothingStoreApp app) {
         this.mainApp = app;
@@ -278,9 +279,7 @@ public class SalesTransactionPanel extends JPanel {
         JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         centerPanel.setBackground(Color.WHITE);
 
-        salesRepCombo = new JComboBox<>(new DisplayData().getComboBoxData(
-            "SELECT CONCAT(sales_rep_id, ' - ', name) FROM salesrep"
-        ));
+        salesRepCombo = new JComboBox<>();
         salesRepCombo.setFont(new Font("Arial", Font.PLAIN, 18));
 
         branchCombo = new JComboBox<>(new DisplayData().getComboBoxData(
@@ -288,10 +287,25 @@ public class SalesTransactionPanel extends JPanel {
         ));
         branchCombo.setFont(new Font("Arial", Font.PLAIN, 18));
 
-        centerPanel.add(new JLabel("Sales Representative:"));
-        centerPanel.add(salesRepCombo);
+        ActionListener updateSalesRep = e -> {
+            String branchId = (String) branchCombo.getSelectedItem();
+            if(branchId != null){
+                String branchCode = branchId.split(" - ")[0];
+                String query = "SELECT CONCAT(sales_rep_id, ' - ', name) FROM SalesRep WHERE branch_code = '" + branchCode + "'";
+                
+                String[] salesRep = displayData.getComboBoxData(query);
+                salesRepCombo.setModel(new DefaultComboBoxModel<>(salesRep));
+            }else { 
+                salesRepCombo.setModel(new DefaultComboBoxModel<>());
+            }
+        };
+
+        branchCombo.addActionListener(updateSalesRep);
+
         centerPanel.add(new JLabel("Branch:"));
         centerPanel.add(branchCombo);
+        centerPanel.add(new JLabel("Sales Representative:"));
+        centerPanel.add(salesRepCombo);
 
         panel.add(centerPanel, BorderLayout.CENTER);
 

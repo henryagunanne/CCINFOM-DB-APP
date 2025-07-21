@@ -202,7 +202,7 @@ public class BranchPanel extends JPanel {
         buttonPanel.add(submitBtn);
         buttonPanel.add(backBtn);
 
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE;
         transferPanel.add(buttonPanel, gbc);
 
         mainPanel.add(transferPanel, "stockTransfer");
