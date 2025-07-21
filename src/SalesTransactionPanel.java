@@ -203,6 +203,8 @@ public class SalesTransactionPanel extends JPanel {
             return false;
         }
     }
+
+    
     private void updateCustomerCombo() {
         customerCombo.removeAllItems();
         String[] customers = new DisplayData().getComboBoxData(
