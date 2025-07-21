@@ -130,10 +130,11 @@ public class SalesTransactionPanel extends JPanel {
     }
 
     private void showNewCustomerDialog() {
-        JDialog dialog = new JDialog(view, "New Customer", true);
+        JDialog dialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "New Customer", true);
         dialog.setLayout(new GridLayout(6, 2, 10, 10));
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
+
 
         JTextField firstNameField = new JTextField();
         JTextField lastNameField = new JTextField();
