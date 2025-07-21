@@ -316,7 +316,7 @@ public class RestockPanel extends JPanel {
                     ResultSet branchRs = branchStmt.executeQuery("SELECT branch_code FROM Branch");
                     
                     while (branchRs.next()) {
-                        String branchCode = branchRs.getString("branch_code");
+                        branchCode = branchRs.getString("branch_code");
                         
                         // Check if product exists in branch inventory
                         PreparedStatement checkStmt = conn.prepareStatement(
