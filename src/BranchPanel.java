@@ -229,118 +229,119 @@ public class BranchPanel extends JPanel {
     }
     
     private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
-    try (Connection conn = DBConnection.getConnection()) {
-        conn.setAutoCommit(false);
-        
-        // Get branch codes
-        String sourceCode = getBranchCode(conn, sourceBranchName);
-        String destCode = getBranchCode(conn, destBranchName);
-        
-        // Get product ID
-        int productId = getProductId(conn, productName);
-        
-        // Check source inventory
-        int sourceQty = getInventoryQuantity(conn, sourceCode, productId);
-        if (sourceQty < quantity) {
-            throw new SQLException("Insufficient stock in source branch");
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            
+            // Get branch codes
+            String sourceCode = getBranchCode(conn, sourceBranchName);
+            String destCode = getBranchCode(conn, destBranchName);
+            
+            // Get product ID
+            int productId = getProductId(conn, productName);
+            
+            // Check source inventory
+            int sourceQty = getInventoryQuantity(conn, sourceCode, productId);
+            if (sourceQty < quantity) {
+                throw new SQLException("Insufficient stock in source branch");
+            }
+            
+            // Update source inventory
+            updateInventory(conn, sourceCode, productId, -quantity);
+            
+            // Update destination inventory
+            updateInventory(conn, destCode, productId, quantity);
+            
+            // Record transfer
+            int transferId = getNextId(conn, "transfer_id", "StockTransfer");
+            String transferSql = "INSERT INTO StockTransfer (transfer_id, product_id, source_branch_code, " +
+                                "dest_branch_code, quantity_transferred, transfer_date, reason) " +
+                                "VALUES (?, ?, ?, ?, ?, CURDATE(), 'Inventory adjustment')";
+            try (PreparedStatement stmt = conn.prepareStatement(transferSql)) {
+                stmt.setInt(1, transferId);
+                stmt.setInt(2, productId);
+                stmt.setString(3, sourceCode);
+                stmt.setString(4, destCode);
+                stmt.setInt(5, quantity);
+                stmt.executeUpdate();
+            }
+            
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Transfer failed: " + e.getMessage(), 
+                                         "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
-        
-        // Update source inventory
-        updateInventory(conn, sourceCode, productId, -quantity);
-        
-        // Update destination inventory
-        updateInventory(conn, destCode, productId, quantity);
-        
-        // Record transfer
-        int transferId = getNextId(conn, "transfer_id", "StockTransfer");
-        String transferSql = "INSERT INTO StockTransfer (transfer_id, product_id, source_branch_code, " +
-                            "dest_branch_code, quantity_transferred, transfer_date, reason) " +
-                            "VALUES (?, ?, ?, ?, ?, CURDATE(), 'Inventory adjustment')";
-        try (PreparedStatement stmt = conn.prepareStatement(transferSql)) {
-            stmt.setInt(1, transferId);
+    }
+
+    // these are helper methods
+    private String getBranchCode(Connection conn, String branchName) throws SQLException {
+        String sql = "SELECT branch_code FROM Branch WHERE branch_name = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, branchName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("branch_code");
+            }
+            throw new SQLException("Branch not found: " + branchName);
+        }
+    }
+    
+    private int getProductId(Connection conn, String productName) throws SQLException {
+        String sql = "SELECT product_id FROM Product WHERE product_name = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, productName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("product_id");
+            }
+            throw new SQLException("Product not found: " + productName);
+        }
+    }
+    
+    private int getInventoryQuantity(Connection conn, String branchCode, int productId) throws SQLException {
+        String sql = "SELECT quantity FROM Inventory WHERE branch_code = ? AND product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, branchCode);
             stmt.setInt(2, productId);
-            stmt.setString(3, sourceCode);
-            stmt.setString(4, destCode);
-            stmt.setInt(5, quantity);
-            stmt.executeUpdate();
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("quantity");
+            }
+            return 0; // no record exists
         }
-        
-        conn.commit();
-        return true;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Transfer failed: " + e.getMessage(), 
-                                     "Error", JOptionPane.ERROR_MESSAGE);
-        return false;
     }
-}
-
-// these are helper methods
-private String getBranchCode(Connection conn, String branchName) throws SQLException {
-    String sql = "SELECT branch_code FROM Branch WHERE branch_name = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, branchName);
-        ResultSet rs = stmt.executeQuery();
-        if (rs.next()) {
-            return rs.getString("branch_code");
-        }
-        throw new SQLException("Branch not found: " + branchName);
-    }
-}
-
-private int getProductId(Connection conn, String productName) throws SQLException {
-    String sql = "SELECT product_id FROM Product WHERE product_name = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, productName);
-        ResultSet rs = stmt.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("product_id");
-        }
-        throw new SQLException("Product not found: " + productName);
-    }
-}
-
-private int getInventoryQuantity(Connection conn, String branchCode, int productId) throws SQLException {
-    String sql = "SELECT quantity FROM Inventory WHERE branch_code = ? AND product_id = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setString(1, branchCode);
-        stmt.setInt(2, productId);
-        ResultSet rs = stmt.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("quantity");
-        }
-        return 0; // no record exists
-    }
-}
-
-private void updateInventory(Connection conn, String branchCode, int productId, int delta) throws SQLException {
-    String sql = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setInt(1, delta);
-        stmt.setString(2, branchCode);
-        stmt.setInt(3, productId);
-        int updated = stmt.executeUpdate();
-        
-        if (updated == 0 && delta > 0) {
-            // new record for destination branch
-            String insertSql = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?)";
-            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                insertStmt.setString(1, branchCode);
-                insertStmt.setInt(2, productId);
-                insertStmt.setInt(3, delta);
-                insertStmt.executeUpdate();
+    
+    private void updateInventory(Connection conn, String branchCode, int productId, int delta) throws SQLException {
+        String sql = "UPDATE Inventory SET quantity = quantity + ? WHERE branch_code = ? AND product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, delta);
+            stmt.setString(2, branchCode);
+            stmt.setInt(3, productId);
+            int updated = stmt.executeUpdate();
+            
+            if (updated == 0 && delta > 0) {
+                // new record for destination branch
+                String insertSql = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setString(1, branchCode);
+                    insertStmt.setInt(2, productId);
+                    insertStmt.setInt(3, delta);
+                    insertStmt.executeUpdate();
+                }
             }
         }
     }
-}
-
-private int getNextId(Connection conn, String idColumn, String table) throws SQLException {
-    String sql = "SELECT MAX(" + idColumn + ") + 1 FROM " + table;
-    try (Statement stmt = conn.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
-        if (rs.next()) {
-            return rs.getInt(1);
+    
+    private int getNextId(Connection conn, String idColumn, String table) throws SQLException {
+        String sql = "SELECT MAX(" + idColumn + ") + 1 FROM " + table;
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // first record
         }
-        return 1; // first record
     }
 }
