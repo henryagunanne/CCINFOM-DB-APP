@@ -1,10 +1,13 @@
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sun.source.tree.EmptyStatementTree;
 
 public class SalesTransactionPanel extends JPanel {
     // Using centralized database connection
@@ -139,6 +142,7 @@ public class SalesTransactionPanel extends JPanel {
         JTextField firstNameField = new JTextField();
         JTextField lastNameField = new JTextField();
         JTextField emailField = new JTextField();
+        JComboBox<String> genderComboBox = new JComboBox<>(new String[]{"Male", "Female", "Other"});
         JCheckBox memberCheck = new JCheckBox();
 
         dialog.add(new JLabel("First Name*:"));
@@ -147,6 +151,8 @@ public class SalesTransactionPanel extends JPanel {
         dialog.add(lastNameField);
         dialog.add(new JLabel("Email*:"));
         dialog.add(emailField);
+        dialog.add(new JLabel("Gender*:"));
+        dialog.add(genderComboBox);
         dialog.add(new JLabel("Member?:"));
         dialog.add(memberCheck);
 
@@ -155,10 +161,11 @@ public class SalesTransactionPanel extends JPanel {
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
             String email = emailField.getText().trim();
+            String gender = (String) genderComboBox.getSelectedItem();
             String member = memberCheck.isSelected() ? "TRUE" : "FALSE";
 
-            if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "First Name, Last Name and Email are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || gender.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Required Fields (*) cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -170,7 +177,7 @@ public class SalesTransactionPanel extends JPanel {
             }
             */
 
-            if (saveNewCustomer(firstName, lastName, member, email)) {
+            if (saveNewCustomer(firstName, lastName, member, email, gender)) {
                 updateCustomerCombo();
                 dialog.dispose();
             }
@@ -188,8 +195,9 @@ public class SalesTransactionPanel extends JPanel {
         dialog.setVisible(true);
     }
     
-    private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email) {
+    private boolean saveNewCustomer(String firstName, String lastName, String isMember, String email, String gender) {
         String sql = "INSERT INTO customer (customer_id, first_name, last_name, email, isMember) VALUES (?, ?, ?, ?, ?)";
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -207,6 +215,27 @@ public class SalesTransactionPanel extends JPanel {
             stmt.setString(4, email);
             stmt.setString(5, isMember);
             int rows = stmt.executeUpdate();
+
+            // add customer to member table 
+            String memberSql = "INSERT INTO member (member_id, customer_id, gender, date_registered) VALUES (?, ?, ?, CURDATE())";
+            if (isMember.equals("TRUE")){
+                try (PreparedStatement memStmt = conn.prepareStatement(memberSql)){
+
+                    int memberId;
+                    String getMaxMemberIdQuery = "SELECT COALESCE(MAX(member_id), 0) + 1 AS next_id FROM Member";
+                    try (Statement idStmt2 = conn.createStatement();
+                        ResultSet idM = idStmt2.executeQuery(getMaxMemberIdQuery)) {
+                        idM.next();
+                        memberId = idM.getInt("next_id");
+                    }
+
+                    memStmt.setInt(1, memberId);
+                    memStmt.setInt(2, customerId);
+                    memStmt.setString(3, gender);
+                    memStmt.executeUpdate();
+                }
+            }
+
             return rows > 0;
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error saving customer: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -430,11 +459,7 @@ public class SalesTransactionPanel extends JPanel {
 
         centerPanel.add(new JLabel("Payment Type:"));
         centerPanel.add(paymentCombo);
-        centerPanel.add(new JLabel("Total Amount:"));
-
-        JLabel totalDisplay = new JLabel(String.format("₱%.2f", totalAmount));
-        totalDisplay.setFont(new Font("Arial", Font.BOLD, 18));
-        centerPanel.add(totalDisplay);
+        centerPanel.add(totalLabel);
 
         panel.add(centerPanel, BorderLayout.CENTER);
 
@@ -470,16 +495,17 @@ public class SalesTransactionPanel extends JPanel {
             if (salesId == -1) {
                 JOptionPane.showMessageDialog(this, "Failed to create sale record", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
+            }else{
+                // create sale items
+                for (SaleItem item : saleItems) {
+                    createSaleItem(conn, salesId, item);
+                    updateInventory(conn, branchCode, item.productName, item.quantity); // update inventory
+                }
+
+                conn.commit();
+                JOptionPane.showMessageDialog(this, "Sale completed successfully! Sales ID: " + salesId);
             }
 
-            // create sale items
-            for (SaleItem item : saleItems) {
-                createSaleItem(conn, salesId, item);
-                updateInventory(conn, branchCode, item.productName, -item.quantity); // update inventory
-            }
-
-            conn.commit();
-            JOptionPane.showMessageDialog(this, "Sale completed successfully! Sales ID: " + salesId);
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error completing sale: " + e.getMessage(), 
@@ -489,7 +515,7 @@ public class SalesTransactionPanel extends JPanel {
 
     // inventory update method
     private void updateInventory(Connection conn, String branchCode, String productName, int delta) throws SQLException {
-        String sql = "UPDATE Inventory SET quantity = quantity + ? " +
+        String sql = "UPDATE Inventory SET quantity = quantity - ? " +
                      "WHERE branch_code = ? AND product_id = (SELECT product_id FROM Product WHERE product_name = ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, delta);
@@ -521,32 +547,50 @@ public class SalesTransactionPanel extends JPanel {
         String branchStr = (String) branchCombo.getSelectedItem();
         branchCode = branchStr.split(" - ")[0];
 
-        String sql = "INSERT INTO sales (customer_id, sales_rep_id, branch_code, sale_date, payment_type, total_amount) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+        int saleId;
+        String getMaxSaleIdQuery = "SELECT COALESCE(MAX(sales_id), 0) + 1 AS next_id FROM Sales";
+        try (Statement idStmt = conn.createStatement();
+            ResultSet idS = idStmt.executeQuery(getMaxSaleIdQuery)) {
+            idS.next();
+            saleId = idS.getInt("next_id");
+        }
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, customerId);
-            stmt.setInt(2, salesRepId);
-            stmt.setString(3, branchCode);
-            stmt.setDate(4, Date.valueOf(LocalDate.now()));
+        String sql = "INSERT INTO Sales (sales_id, customer_id, sales_rep_id, branch_code, sale_date, payment_type, total_amount) " +
+                     "VALUES (?, ?, ?, ?, CURDATE(), ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, saleId);
+            stmt.setInt(2, customerId);
+            stmt.setInt(3, salesRepId);
+            stmt.setString(4, branchCode);
             stmt.setString(5, paymentType);
             stmt.setDouble(6, totalAmount);
-            stmt.executeUpdate();
+            int rows = stmt.executeUpdate();
 
-            ResultSet rs = stmt.getGeneratedKeys();
-            return rs.next() ? rs.getInt(1) : -1;
+        
+            return rows > 0 ? saleId : -1;
         }
     }
 
     private void createSaleItem(Connection conn, int salesId, SaleItem item) throws SQLException {
-        String sql = "INSERT INTO salesitems (sale_id, product_id, quantity_ordered, unit_price) " +
-                     "VALUES (?, (SELECT product_id FROM product WHERE product_name = ?), ?, ?)";
+        String sql = "INSERT INTO SalesItems (sale_item_id, sales_id, product_id, quantity_ordered, unit_price) " +
+                     "VALUES (?, ?, (SELECT product_id FROM product WHERE product_name = ?), ?, ?)";
 
+
+        int saleItemId;
+        String getMaxSaleItemIdQuery = "SELECT COALESCE(MAX(sale_item_id), 0) + 1 AS next_id FROM SalesItems";
+        try (Statement idStmt = conn.createStatement();
+            ResultSet idSi = idStmt.executeQuery(getMaxSaleItemIdQuery)) {
+            idSi.next();
+            saleItemId = idSi.getInt("next_id");
+        }
+             
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, salesId);
-            stmt.setString(2, item.productName);
-            stmt.setInt(3, item.quantity);
-            stmt.setDouble(4, item.unitPrice);
+            stmt.setInt(1, saleItemId);
+            stmt.setInt(2, salesId);
+            stmt.setString(3, item.productName);
+            stmt.setInt(4, item.quantity);
+            stmt.setDouble(5, item.unitPrice);
             stmt.executeUpdate();
         }
     }
