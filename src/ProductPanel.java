@@ -241,7 +241,7 @@ public class ProductPanel extends JPanel {
         backButton.setForeground(Color.WHITE);
         backButton.setOpaque(true);
         backButton.setBorderPainted(false);
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "productMenu"));
+        backButton.addActionListener(e -> showPurchaseHistory());
         JPanel backPanel = new JPanel();
         backPanel.add(backButton);
         panel.add(backPanel, BorderLayout.SOUTH);
@@ -638,29 +638,11 @@ public class ProductPanel extends JPanel {
         JPanel restockPanel = new JPanel(new GridBagLayout());
         restockPanel.setBackground(Color.WHITE);
 
-        // Create branch name combo box with hardcoded values
-        JComboBox<String> branchName = new JComboBox<>();
-        branchName.addItem("Manila Branch");
-        branchName.addItem("Davao Branch");
-        branchName.addItem("Cebu Branch");
-        
-        // Create product name combo box with hardcoded values for common products
-        JComboBox<String> productName = new JComboBox<>();
-        productName.addItem("MENS T-SHIRT");
-        productName.addItem("MENS LEVIS");
-        productName.addItem("CLASSIC TEE");
-        productName.addItem("DENIM JACKET");
-        productName.addItem("SLIM FIT JEANS");
-        
-        // Create supplier combo box with hardcoded values
-        JComboBox<String> supplier = new JComboBox<>();
-        supplier.addItem("CottonWear Inc.");
-        supplier.addItem("DenimSupply Co.");
-        supplier.addItem("FashionFirst Ltd.");
-        supplier.addItem("StyleHub Apparel Co.");
-        
+        JComboBox<String> branchName = new JComboBox<>(displayData.getComboBoxData("SELECT branch_name FROM Branch ORDER BY branch_name"));
+        JComboBox<String> productName = new JComboBox<>(displayData.getComboBoxData("SELECT product_name FROM Product ORDER BY product_name"));
+        JComboBox<String> supplier = new JComboBox<>(displayData.getComboBoxData("SELECT supplier_name FROM Supplier ORDER BY supplier_name")); 
         JTextField quantityField = new JTextField();
-        JLabel costLabel = new JLabel("₱0.00");
+        JLabel costLabel = new JLabel("₱0.00"); 
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -694,21 +676,22 @@ public class ProductPanel extends JPanel {
             private void updateCost() {
                 try {
                     String product = (String) productName.getSelectedItem();
-                    if (product != null && !quantityField.getText().isEmpty()) {
-                        // Use hardcoded prices instead of querying the database
-                        double unitPrice = 0.0;
-                        if (product.equals("MENS T-SHIRT")) unitPrice = 400.00;
-                        else if (product.equals("MENS LEVIS")) unitPrice = 700.00;
-                        else if (product.equals("CLASSIC TEE")) unitPrice = 399.99;
-                        else if (product.equals("DENIM JACKET")) unitPrice = 1499.50;
-                        else if (product.equals("SLIM FIT JEANS")) unitPrice = 999.00;
-                        
-                        int quantity = Integer.parseInt(quantityField.getText());
-                        double cost = unitPrice * 0.7 * quantity;
-                        costLabel.setText(String.format("₱%.2f", cost));
+                    String unitPriceQuery = "SELECT unit_price FROM Product WHERE product_name = '" + product + "'";
+                    
+                    double unitPrice = 0;
+                    try (ResultSet rs = executeQuery(unitPriceQuery)) {
+                        if (rs.next()) {
+                            unitPrice = rs.getDouble("unit_price");
+                        }
                     }
+
+                    int quantity = Integer.parseInt(quantityField.getText());
+                    double cost = unitPrice * 0.7 * quantity;
+                    costLabel.setText(String.format("₱%.2f", cost));
                 } catch (NumberFormatException ex) {
                     costLabel.setText("₱0.00"); // Reset or show error if input is invalid
+                }catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -732,15 +715,15 @@ public class ProductPanel extends JPanel {
                 String product = (String) productName.getSelectedItem();
                 String strSupplier = (String) supplier.getSelectedItem();
                 int quantity = Integer.parseInt(quantityField.getText());
-                
-                if (quantity <= 0) {
-                    JOptionPane.showMessageDialog(this, "Please enter a positive quantity", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
+
+                String strCost= costLabel.getText();
+                double cost = Double.parseDouble(strCost.substring(1));
+
+                if(restockProduct(branch, product, strSupplier, quantity, cost)){
+                    JOptionPane.showMessageDialog(this, "Product restocked successfully!");
+                    displayRestockProduct();
                 }
-                
-                // Simulate successful restock without database query
-                JOptionPane.showMessageDialog(this, "Product restocked successfully!");
-                cardLayout.show(mainPanel, "productMenu");
+                //cardLayout.show(mainPanel, "productMenu");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -757,6 +740,9 @@ public class ProductPanel extends JPanel {
         mainPanel.add(restockPanel, "restockProduct");
         cardLayout.show(mainPanel, "restockProduct");
     }
+
+
+    
 
     private boolean processReturn(String branchCode, String saleDate, String productName, String reason, int quantity) {
         try (Connection conn = DBConnection.getConnection()) {
