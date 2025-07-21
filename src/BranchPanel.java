@@ -16,6 +16,7 @@ public class BranchPanel extends JPanel {
 
     private JComboBox<String> sourceBranch, destBranch, productBox;
     private JTextField quantityField;
+    private JTextField reasonField;
     private DisplayData displayData = new DisplayData();
     private ClothingStoreApp mainApp;
     private JPanel mainPanel;
@@ -232,9 +233,98 @@ public class BranchPanel extends JPanel {
         }
     }
     
-    private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity) {
-        // Implementation remains the same as in BranchModel
-        // This is a placeholder to avoid making this file too long
-        return true; // Replace with actual implementation
+    private boolean transferStock(String sourceBranchName, String destBranchName, String productName, int quantity, String reason) {
+        String getBranchIdQuery = "SELECT branch_code FROM Branch WHERE branch_name = ?";
+        String getProductIdQuery = "SELECT product_id FROM Product WHERE product_name = ?";
+        String checkStockQuery = "SELECT quantity FROM Inventory WHERE branch_code = ? AND product_id = ?";
+        String updateSourceQuery = "UPDATE Inventory SET quantity = quantity - ? WHERE branch_code = ? AND product_id = ?";
+        String updateDestQuery = "INSERT INTO Inventory (branch_code, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?";
+        String updateStockTransferQuery = "INSERT INTO StockTransfer (transfer_id, product_id, source_branch_code, dest_branch_code, quantity_transferred, transfer_date, reason) " +
+                                          "VALUES (?, ?, ?, ?, ?, CURDATE(), ?)";
+
+        try (Connection conn =  DBConnection.getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
+
+            try (PreparedStatement getSourceIdStmt = conn.prepareStatement(getBranchIdQuery);
+                 PreparedStatement getDestIdStmt = conn.prepareStatement(getBranchIdQuery);
+                 PreparedStatement getProdIdStmt = conn.prepareStatement(getProductIdQuery)) {
+
+                getSourceIdStmt.setString(1, sourceBranchName);
+                String sourceBranchId = null;
+                try (ResultSet rs = getSourceIdStmt.executeQuery()) { if (rs.next()) sourceBranchId = rs.getString(1); }
+
+                getDestIdStmt.setString(1, destBranchName);
+                String destBranchId = null;
+                try (ResultSet rs = getDestIdStmt.executeQuery()) { if (rs.next()) destBranchId = rs.getString(1); }
+
+                getProdIdStmt.setString(1, productName);
+                int productId = -1;
+                try (ResultSet rs = getProdIdStmt.executeQuery()) { if (rs.next()) productId = rs.getInt(1); }
+
+                if (sourceBranchId == null || destBranchId == null || productId == -1) {
+                    JOptionPane.showMessageDialog(this, "Invalid branch or product selected.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                // Check stock
+                try (PreparedStatement checkStockStmt = conn.prepareStatement(checkStockQuery)) {
+                    checkStockStmt.setString(1, sourceBranchId);
+                    checkStockStmt.setInt(2, productId);
+                    try (ResultSet rs = checkStockStmt.executeQuery()) {
+                        if (!rs.next() || rs.getInt("quantity") < quantity) {
+                            JOptionPane.showMessageDialog(this, "Insufficient stock in the source branch.", "Error", JOptionPane.ERROR_MESSAGE);
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                // Perform update
+                try (PreparedStatement updateSourceStmt = conn.prepareStatement(updateSourceQuery);
+                     PreparedStatement updateDestStmt = conn.prepareStatement(updateDestQuery);
+                     PreparedStatement updateStockTransferStmt = conn.prepareStatement(updateStockTransferQuery)) {
+
+                    updateSourceStmt.setInt(1, quantity);
+                    updateSourceStmt.setString(2, sourceBranchId);
+                    updateSourceStmt.setInt(3, productId);
+                    updateSourceStmt.executeUpdate();
+
+                    updateDestStmt.setString(1, destBranchId);
+                    updateDestStmt.setInt(2, productId);
+                    updateDestStmt.setInt(3, quantity);
+                    updateDestStmt.setInt(4, quantity);
+                    updateDestStmt.executeUpdate();
+
+                    int transferId;
+                    String getMaxTransferIdQuery = "SELECT COALESCE(MAX(transfer_id), 0) + 1 AS next_id FROM StockTransfer";
+                    try (Statement idStmt = conn.createStatement();
+                        ResultSet idSt = idStmt.executeQuery(getMaxMemberIdQuery)) {
+                        idSt.next();
+                        transferId = idSt.getInt("next_id");
+                    }
+
+                    updateStockTransferStmt.setInt(1, transferId);
+                    updateStockTransferStmt.setInt(2, productId);
+                    updateStockTransferStmt.setString(3, sourceBranchId);
+                    updateStockTransferStmt.setString(4, destBranchId);
+                    updateStockTransferStmt.setInt(5, quantity);
+                    updateStockTransferStmt.setString(6, reason);
+                    updateStockTransferStmt.executeUpdate();
+
+                    conn.commit(); // Commit transaction
+                    return true;
+                }
+
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred during the transfer: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     }
 }
