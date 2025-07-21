@@ -280,7 +280,7 @@ public class SalesTransactionPanel extends JPanel {
         inputPanel.setBackground(Color.WHITE);
         
         productCombo = new JComboBox<>(new DisplayData().getComboBoxData(
-            "SELECT product_name FROM product"
+        "SELECT CONCAT(product_id, ' - ', product_name, ' - ', size, ' - ', color) FROM product"
         ));
         productCombo.setFont(new Font("Arial", Font.PLAIN, 18));
         
@@ -331,21 +331,25 @@ public class SalesTransactionPanel extends JPanel {
     
     private void addProductToSale() {
         try {
-            String productName = (String) productCombo.getSelectedItem();
-            if (productName == null || productName.isEmpty()) {
+            String selected = (String) productCombo.getSelectedItem();
+            if (selected == null || selected.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please select a product", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            
+            // extract product ID from selection
+            int productId = Integer.parseInt(selected.split(" - ")[0]);
             int quantity = Integer.parseInt(quantityField.getText());
+            
             if (quantity <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantity must be positive", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
-            double unitPrice = getProductPrice(productName);
+            double unitPrice = getProductPrice(productId);
             double subtotal = unitPrice * quantity;
             
-            saleItems.add(new SaleItem(productName, quantity, unitPrice));
+            saleItems.add(new SaleItem(selected, quantity, unitPrice));  // store full description
             totalAmount += subtotal;
             updateItemsTable();
             updateProceedButton();
@@ -360,11 +364,11 @@ public class SalesTransactionPanel extends JPanel {
         nextButtonProducts.setEnabled(!saleItems.isEmpty());
     }
     
-    private double getProductPrice(String productName) {
+    private double getProductPrice(int productId) {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                 "SELECT unit_price FROM product WHERE product_name = ?")) {
-            stmt.setString(1, productName);
+                 "SELECT unit_price FROM product WHERE product_id = ?")) {
+            stmt.setInt(1, productId);
             ResultSet rs = stmt.executeQuery();
             return rs.next() ? rs.getDouble("unit_price") : 0.0;
         } catch (SQLException e) {
@@ -515,12 +519,15 @@ public class SalesTransactionPanel extends JPanel {
     }
     
     private void createSaleItem(Connection conn, int salesId, SaleItem item) throws SQLException {
+        // extract product ID from stored description
+        int productId = Integer.parseInt(item.productName.split(" - ")[0]);
+        
         String sql = "INSERT INTO salesitems (sale_id, product_id, quantity_ordered, unit_price) " +
-                     "VALUES (?, (SELECT product_id FROM product WHERE product_name = ?), ?, ?)";
+                     "VALUES (?, ?, ?, ?)";
         
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, salesId);
-            stmt.setString(2, item.productName);
+            stmt.setInt(2, productId);
             stmt.setInt(3, item.quantity);
             stmt.setDouble(4, item.unitPrice);
             stmt.executeUpdate();
