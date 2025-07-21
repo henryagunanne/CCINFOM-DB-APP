@@ -451,6 +451,7 @@ public class SalesTransactionPanel extends JPanel {
             // create sale items
             for (SaleItem item : saleItems) {
                 createSaleItem(conn, salesId, item);
+                updateInventory(conn, branchCode, item.productName, -item.quantity); // update inventory
             }
             
             conn.commit();
@@ -459,6 +460,30 @@ public class SalesTransactionPanel extends JPanel {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error completing sale: " + e.getMessage(), 
                                           "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // inventory update method
+    private void updateInventory(Connection conn, String branchCode, String productName, int delta) throws SQLException {
+        String sql = "UPDATE Inventory SET quantity = quantity + ? " +
+                     "WHERE branch_code = ? AND product_id = (SELECT product_id FROM Product WHERE product_name = ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, delta);
+            stmt.setString(2, branchCode);
+            stmt.setString(3, productName);
+            int updated = stmt.executeUpdate();
+            
+            if (updated == 0) {
+                // insert if record doesn't exist
+                String insertSql = "INSERT INTO Inventory (branch_code, product_id, quantity) " +
+                                  "SELECT ?, product_id, ? FROM Product WHERE product_name = ?";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setString(1, branchCode);
+                    insertStmt.setInt(2, delta);
+                    insertStmt.setString(3, productName);
+                    insertStmt.executeUpdate();
+                }
+            }
         }
     }
     
