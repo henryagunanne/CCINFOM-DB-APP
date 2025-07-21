@@ -53,6 +53,13 @@ public class SalesTransactionPanel extends JPanel {
         cardLayout.show(cardPanel, "CUSTOMER");
     }
 
+    public void resetPanel() {
+        saleItems.clear();
+        totalAmount = 0.0;
+        cardLayout.show(cardPanel, "CUSTOMER");
+        updateItemsTable(); // refresh table to show it's empty
+    }
+
     private JPanel createCustomerPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -106,7 +113,10 @@ public class SalesTransactionPanel extends JPanel {
 
         JButton backButton = new JButton("Back to Main Menu");
         backButton.setFont(new Font("Arial", Font.PLAIN, 18));
-        backButton.addActionListener(e -> mainApp.showPanel("MainMenu"));
+        backButton.addActionListener(e -> {
+            resetPanel();
+            mainApp.showPanel("MainMenu");
+        });
         buttonPanel.add(backButton, BorderLayout.WEST);
 
         JButton nextButton = new JButton("Next");
@@ -547,6 +557,7 @@ public class SalesTransactionPanel extends JPanel {
             saleItems.clear();
             totalAmount = 0.0;
             cardLayout.show(cardPanel, "CUSTOMER");
+            resetPanel();
             mainApp.showPanel("MainMenu");
         });
 
