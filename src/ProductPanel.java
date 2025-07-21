@@ -926,13 +926,30 @@ public class ProductPanel extends JPanel {
                             }
                         }
                         
+                        int restockId;
+                        String getMaxRestockIdQuery = "SELECT COALESCE(MAX(restock_id), 0) + 1 AS next_id FROM Restock";
+                        try (Statement idStmt = conn.createStatement();
+                            ResultSet idR = idStmt.executeQuery(getMaxRestockIdQuery)) {
+                            idR.next();
+                            restockId = idR.getInt("next_id");
+                        }
+
+                        int supplierId;
+                        String getSupplierIdQuery = "SELECT supplier_id FROM Supplier WHERE supplier_name = '" + supplier + "'";
+                        try (Statement idStmt2 = conn.createStatement();
+                            ResultSet idS = idStmt2.executeQuery(getSupplierIdQuery)) {
+                            idS.next();
+                            supplierId = idS.getInt("supplier_id");
+                        }
+
                         // Record the restock transaction
-                        String restockQuery = "INSERT INTO restock (product_id, supplier_name, quantity, cost, restock_date) VALUES (?, ?, ?, ?, CURDATE())";
+                        String restockQuery = "INSERT INTO restock (restock_id, product_id, supplier_id, quantity_added, cost_price, restock_date) VALUES (?, ?, ?, ?, ?, CURDATE())";
                         try (PreparedStatement rStmt = conn.prepareStatement(restockQuery)) {
-                            rStmt.setInt(1, productId);
-                            rStmt.setString(2, supplier);
-                            rStmt.setInt(3, quantity);
-                            rStmt.setDouble(4, cost);
+                            rStmt.setInt(1, restockId);
+                            rStmt.setInt(2, productId);
+                            rStmt.setInt(3, supplierId);
+                            rStmt.setInt(4, quantity);
+                            rStmt.setDouble(5, cost);
                             rStmt.executeUpdate();
                         }
                         
