@@ -196,11 +196,14 @@ public class SalesTransactionPanel extends JPanel {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            int customerId = -1;
-            try (ResultSet rs = executeQuery("SELECT customer_id FROM Customer ORDER BY customer_id DESC LIMIT 1")) {
-                customerId = rs.next() ? rs.getInt("customer_id") + 1 : 3000;    
-
+            int customerId;
+            String idQuery = "SELECT COALESCE(MAX(customer_id), 0) + 1 AS next_id FROM Customer"
+            try (Statement idStmt = conn.createStatement();
+                ResultSet idC = idStmt.executeQuery(idQuery)) {
+                idC.next();
+                customerId = idC.getInt("next_id");
             }
+
             stmt.setInt(1, customerId);
             stmt.setString(2, firstName);
             stmt.setString(3, lastName);
