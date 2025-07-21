@@ -310,9 +310,6 @@ public class RestockPanel extends JPanel {
                     pstmt.setDouble(5, item.costPrice);
                     pstmt.setDate(6, currentDate);
                     pstmt.executeUpdate();
-                    
-                    branchRs.close();
-                    branchStmt.close();
 
                     // Update inventory for specific branch
                     updateInventory(conn, branchCode, item.productId, item.quantity);
