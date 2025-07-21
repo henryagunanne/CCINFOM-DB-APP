@@ -185,7 +185,8 @@ public class BranchPanel extends JPanel {
 
                 if (transferStock(src, dst, product, qty)) {
                     JOptionPane.showMessageDialog(this, "Stock transferred successfully!");
-                    cardLayout.show(mainPanel, "branchMenu");
+                    showStockTransfer();
+                    //cardLayout.show(mainPanel, "branchMenu");
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
