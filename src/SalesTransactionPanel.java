@@ -332,8 +332,11 @@ public class SalesTransactionPanel extends JPanel {
     private void addProductToSale() {
         try {
             String productName = (String) productCombo.getSelectedItem();
+            if (productName == null || productName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select a product", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             int quantity = Integer.parseInt(quantityField.getText());
-            
             if (quantity <= 0) {
                 JOptionPane.showMessageDialog(this, "Quantity must be positive", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -349,7 +352,7 @@ public class SalesTransactionPanel extends JPanel {
             
             quantityField.setText("");
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid quantity", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Invalid quantity format", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
