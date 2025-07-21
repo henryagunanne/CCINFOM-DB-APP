@@ -299,7 +299,7 @@ public class ProductPanel extends JPanel {
                 String query = "SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) AS customer_name, " +
                               "si.unit_price, si.quantity_ordered, s.sale_date, b.branch_name " +
                               "FROM SalesItems si " +
-                              "JOIN Sales s ON s.sales_id = si.sale_id " +
+                              "JOIN Sales s ON s.sales_id = si.sales_id " +
                               "JOIN Customer c ON c.customer_id = s.customer_id " +
                               "JOIN Branch b ON b.branch_code = s.branch_code " +
                               "WHERE si.product_id = ? " +
@@ -318,7 +318,7 @@ public class ProductPanel extends JPanel {
                 String query = "SELECT c.customer_id, CONCAT(c.first_name, ' ', c.last_name) AS customer_name, " +
                               "si.unit_price, si.quantity_ordered, s.sale_date, b.branch_name " +
                               "FROM SalesItems si " +
-                              "JOIN Sales s ON s.sales_id = si.sale_id " +
+                              "JOIN Sales s ON s.sales_id = si.sales_id " +
                               "JOIN Customer c ON c.customer_id = s.customer_id " +
                               "JOIN Branch b ON b.branch_code = s.branch_code " +
                               "WHERE si.product_id = ? " +
@@ -349,13 +349,13 @@ public class ProductPanel extends JPanel {
         returnTitle.setFont(titleFont);
         
         // Create the form components
-        JLabel branchLabel = new JLabel("Branch code:");
-        JLabel dateLabel = new JLabel("Sale date (YYYY-MM-DD):");
-        JLabel customerLabel = new JLabel("Customer Name");
-        JLabel customerIdLabel = new JLabel("");
+        JLabel branchLabel = new JLabel("Branch code: ");
+        JLabel dateLabel = new JLabel("Sale date (YYYY-MM-DD): ");
+        JLabel customerLabel = new JLabel("Customer Name: ");
+        JLabel customerIdLabel = new JLabel("Customer ID: ");
         JLabel itemLabel = new JLabel("Item to return:");
-        JLabel quantityLabel = new JLabel("Quantity to return :");
-        JLabel reasonLabel = new JLabel("Reason :");
+        JLabel quantityLabel = new JLabel("Quantity to return: ");
+        JLabel reasonLabel = new JLabel("Reason: ");
         JLabel costLabel = new JLabel("Cost: ₱0.00");  // Initialize with 0
         
         JComboBox<String> branchCode  = new JComboBox<>(displayData.getComboBoxData("SELECT branch_code FROM Branch ORDER BY branch_code"));
@@ -534,7 +534,7 @@ public class ProductPanel extends JPanel {
         buttonPanel.add(backBtn);
         
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 9;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         returnPanel.add(buttonPanel, gbc);
@@ -765,7 +765,7 @@ public class ProductPanel extends JPanel {
             // Get the sale ID and product ID
             String saleQuery = "SELECT s.sales_id, p.product_id, si.quantity_ordered, si.unit_price " +
                               "FROM Sales s " +
-                              "JOIN SalesItems si ON s.sales_id = si.sale_id " +
+                              "JOIN SalesItems si ON s.sales_id = si.sales_id " +
                               "JOIN Product p ON si.product_id = p.product_id " +
                               "WHERE s.branch_code = ? AND DATE_FORMAT(s.sale_date, '%Y-%m-%d') = ? " +
                               "AND p.product_name = ?";
@@ -816,7 +816,7 @@ public class ProductPanel extends JPanel {
                 } else {
                     // Update the quantity if partial return
                     String updateSaleItemQuery = "UPDATE SalesItems SET quantity_ordered = quantity_ordered - ? " +
-                                                "WHERE sale_id = ? AND product_id = ?";
+                                                "WHERE sales_id = ? AND product_id = ?";
                     try (PreparedStatement updateStmt = conn.prepareStatement(updateSaleItemQuery)) {
                         updateStmt.setInt(1, quantity);
                         updateStmt.setInt(2, saleId);
