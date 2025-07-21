@@ -298,7 +298,7 @@ public class BranchPanel extends JPanel {
                     int transferId;
                     String getMaxTransferIdQuery = "SELECT COALESCE(MAX(transfer_id), 0) + 1 AS next_id FROM StockTransfer";
                     try (Statement idStmt = conn.createStatement();
-                        ResultSet idSt = idStmt.executeQuery(getMaxMemberIdQuery)) {
+                        ResultSet idSt = idStmt.executeQuery(getMaxTransferIdQuery)) {
                         idSt.next();
                         transferId = idSt.getInt("next_id");
                     }
