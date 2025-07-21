@@ -463,9 +463,16 @@ INSERT INTO `Restock` VALUES
 --
 CREATE TABLE IF NOT EXISTS `DBclothing`.`Returns` (
   `return_id` INT NOT NULL,
+  `sales_id` INT NOT NULL,
   `return_date` DATE NOT NULL,
   `reason` TEXT NOT NULL,
-  PRIMARY KEY (`return_id`))
+  PRIMARY KEY (`return_id`),
+  INDEX `fk_Returns_Sales1_idx` (`sales_id` ASC) VISIBLE,
+  CONSTRAINT `fk_Returns_Sales1`
+    FOREIGN KEY (`sales_id`)
+    REFERENCES `DBclothing`.`Sales` (`sales_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -473,8 +480,8 @@ ENGINE = InnoDB;
 -- Dumping data for table `Returns`
 --
 INSERT INTO `Returns` VALUES
-(7001, '2025-06-13', 'Size too small'),
-(7002, '2025-06-14', 'Defective item');
+(7001, 5001, '2025-06-13', 'Size too small'),
+(7002, 5003, '2025-06-14', 'Defective item');
 -- ------------------------------------------------------
 
 
