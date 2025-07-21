@@ -721,9 +721,9 @@ public class ProductPanel extends JPanel {
 
                 if(restockProduct(branch, product, strSupplier, quantity, cost)){
                     JOptionPane.showMessageDialog(this, "Product restocked successfully!");
-                    displayRestockProduct();
+                    cardLayout.show(mainPanel, "productMenu");
                 }
-                //cardLayout.show(mainPanel, "productMenu");
+                
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid positive quantity.", "Error", JOptionPane.ERROR_MESSAGE);
             }
