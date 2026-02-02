@@ -1,254 +1,129 @@
-<!-----
+# CCINFOM Database Application  
+## 👚 Clothing Store Inventory & Sales Management System
 
+![Course](https://img.shields.io/badge/Course-CCINFOM-blue)
+![Institution](https://img.shields.io/badge/Institution-De%20La%20Salle%20University-green)
+![Project Type](https://img.shields.io/badge/Project-Type%3A%20Database%20Application-lightgrey)
+![Technologies](https://img.shields.io/badge/Technologies-Java%2C%20SQL-blueviolet)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
+---
 
-Conversion time: 1.368 seconds.
+## 📌 Project Overview
 
+The **Clothing Store Inventory & Sales Management System** is a database-driven application developed to replace manual inventory tracking and sales recording processes—typically handled via Excel—within retail environments. This system is intended as a **comprehensive solution** for managing product inventory, customer records, sales transactions, stock updates, and analytical reporting accurately and efficiently.
 
-Using this Markdown file:
+By centralizing business data into a structured database model and integrating transactional workflows, this system enhances **operational efficiency**, **data reliability**, and **decision support** for store personnel and managers.
 
-1. Paste this output into your source file.
-2. See the notes and action items below regarding this conversion run.
-3. Check the rendered output (headings, lists, code blocks, tables) for proper
-   formatting and use a linkchecker before you publish this page.
+---
 
-Conversion notes:
+## 🎯 Academic & Practical Objectives
 
-* Docs to Markdown version 1.0β44
-* Sat Jul 19 2025 00:34:03 GMT-0700 (PDT)
-* Source doc: CCINFOM Database Application Proposal
-* Tables are currently converted to HTML tables.
------>
+The system aims to:
 
+- Provide a **centralized database solution** for managing products, customers, sales reps, and branches  
+- Support **real-time transaction recording** and **inventory updates**  
+- Generate meaningful **sales and performance reports**  
+- Demonstrate effective **database-driven application design** as part of academic requirements  
 
-**        CCINFOM DATABASE APPLICATION PROPOSAL**
+---
 
-# Clothing Store Inventory and Sales Management System
+## 🧩 System Architecture
 
+The CCINFOM system is structured around core entities essential to retail operations:
 
-### **Section 1.0 Group Composition**
+### 🗂️ Major Components
 
+- **Product:** Tracks inventory levels, attributes, categories, and pricing  
+- **Customer:** Manages customer details and purchase history  
+- **Sales Representative:** Records sales rep assignments and performance  
+- **Branch:** Handles store locations and associated staff  
+- **Transactions:** Includes sales, returns, restocking, and inventory transfers  
 
+Each module interacts with the underlying relational database to ensure **data integrity**, **consistency**, and **traceability** of business activities.
 
-* Agunanne, Henry  
-* Adriano, Mark Luis
-* Encallado, Edlynn Rei
-* Manatad, Francinne
+---
 
-**Section 2.0 Why is this Database System important to be developed**
+## ✨ Key Features
 
-One cannot deny that relying on Excel to manage inventory, customer data, and sales often becomes unmanageable and prone to errors as the business grows bigger. Hence, having a dedicated database system will centralize these processes and enable real-time tracking, accurate sales recording, and automated reporting. This not only enhances operational efficiency but also provides the analytical tools needed to support informed, data-driven business decisions—capabilities that Excel alone cannot reliably offer.
+### 📦 Inventory & Product Management
 
-**Section 3.0 Records Management**
+- Add/update/delete products with attributes like category, size, color, and stock level  
+- Automated stock adjustments following sales or restock entries  
+- Track discontinued products and inventory thresholds
 
-The proposed database system will maintain four core entities: Product, Customer, Sales Representative, and Branch Records. Each of these components plays a vital role in the store’s operations and will be handled through dedicated record management modules. Detailed descriptions of each record are presented in the table below.
+### 🧍 Customer & Sales Rep Management
 
+- Maintain customer profiles with linked purchase histories  
+- Record sales rep details and associate them with branch performance  
+- Support analytical breakdowns per representative
 
-<table>
-  <tr>
-   <td><strong>Records</strong>
-   </td>
-   <td><strong>Fields</strong>
-   </td>
-   <td><strong>Assigned to</strong>
-   </td>
-  </tr>
-  <tr>
-   <td>Product Record Management
-   </td>
-   <td>
-<ul>
+### 🧾 Transaction Workflows
 
-<li>product_id</li>
+- Sell clothing items with validation and stock decrement  
+- Process product returns and update inventory accordingly  
+- Facilitate stock transfers between branches
 
-<li>product_name</li>
+### 📊 Reporting
 
-<li>size</li>
+- **Monthly Sales Summary**
+- **Product Performance**
+- **Sales Representative Performance**
+- **Branch Revenue Reports**
 
-<li>color</li>
+These reports support business insights and informed decision making.
 
-<li>category</li>
+---
 
-<li>quantity_in_stock</li>
+## ⚙️ Technologies Used
 
-<li>unit_price</li>
+- **Java** – Core application logic  
+- **MySQL / SQL Database** – Data persistence and queries  
+- **SQL Scripts** – Database schema and relationships  
+- **Batch Scripts (`run.bat`, `run.sh`)** – Easy environment initialization
 
-<li>discontinued
-<strong>Including</strong> viewing a product record and the list of customers who purchased it</li>
-</ul>
-   </td>
-   <td>Henry Agunanne
-   </td>
-  </tr>
-  <tr>
-   <td>Customer Record Management
-   </td>
-   <td>
-<ul>
+---
 
-<li><em>customer_id</em></li>
+## 🛠️ Setup & Installation
 
-<li><em>first_name</em></li>
+### Prerequisites
 
-<li><em>last_name</em></li>
+- Java JDK (version 8 or above)
+- MySQL Server
+- IDE (optional): Eclipse, IntelliJ IDEA, or NetBeans
 
-<li><em>email</em></li>
+### Installation Steps
 
-<li><em>gender</em></li>
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/henryagunanne/CCINFOM-DB-APP.git
+   ```
+   
+Import or run the SQL schema in your MySQL environment.
+Configure database credentials in the application as needed.
+Build and run the Java application via your IDE or scripts.
 
-<li><em>date_registered</em>
-<strong>Including</strong> viewing a customer and the list of products they purchased</li>
-</ul>
-   </td>
-   <td>Manatad, Francinne Kaye
-   </td>
-  </tr>
-  <tr>
-   <td>Sales Representative Record Management
-   </td>
-   <td>
-<ul>
+--- 
 
-<li><em>sales_rep_id</em></li>
+### 👥 Development Team
 
-<li><em>name</em></li>
+Developed collaboratively by:
+- Agunanne, Henry
+- Adriano, Mark Luis
+- Encallado, Edlynn Rei
+- Manatad, Francinne
+  
+All members contributed to system design, implementation, testing, documentation, and integration.
 
-<li><em>branch_code</em></li>
+--- 
 
-<li><em>email</em></li>
+### 📄 License
 
-<li><em>hire_date</em></li>
+This project is licensed under the **MIT License**.  
+See the [LICENSE](./LICENSE) file for full details.
 
-<li><em>active_status</em>
-<strong>Including</strong> viewing a sales representative and their completed sales</li>
-</ul>
-   </td>
-   <td>Encallado Edlynn Rei
-   </td>
-  </tr>
-  <tr>
-   <td>Branch Record Management
-   </td>
-   <td>
-<ul>
+---
 
-<li><em>branch_code</em></li>
+### ⭐ Acknowledgements
 
-<li><em>branch_name</em></li>
-
-<li><em>location</em></li>
-
-<li><em>contact_number</em>
-<strong>Including</strong> viewing a branch and the list of active sales representatives</li>
-</ul>
-   </td>
-   <td>Manatad Francinne
-   </td>
-  </tr>
-</table>
-
-
-**Section 4.0 Transactions**
-
-
-#### Transaction 1: Selling Clothing Items
-
-*Assigned to: Encallado Edlynn Rei* \
-Operations:
-
-
-
-* Retrieve information and validate status if the sale is from a member
-* Display available products by size and category
-* Record the sale (type of payment, member information, sales rep, total amount, date)
-* Record each item sold (product, quantity, unit price)
-* Update stock quantity
-
-Transaction 2: Restocking Products
-
-*Assigned to: Manatad, Francinne* \
-Operations:
-
-
-
-* Choose supplier
-* Select products to restock
-* Input quantity and cost
-* Record restocking entry
-* Update stock levels
-
-
-#### Transaction 3: Processing a Return
-
-*Assigned to: Agunanne, Henry* \
-Operations:
-
-
-
-* Select past sale to return from
-* Select items and quantities being returned
-* Add return record and reason
-* Update product stock (increase quantity)
-* Generate return receipt
-
-
-#### Transaction 4: Transferring Stock Between Branches
-
-*Assigned to: Manatad, Francinne* \
-Operations:
-
-
-
-* Select source and destination branches
-* Select products and quantity to transfer
-* Deduct from source branch inventory
-* Add to destination branch inventory
-* Log stock transfer with date and reason
-
-
-### **Section 5.0 Reports to be Generated**
-
-
-<table>
-  <tr>
-   <td><strong>Report</strong>
-   </td>
-   <td><strong><em>Description</em></strong>
-   </td>
-   <td><strong>Assigned to</strong>
-   </td>
-  </tr>
-  <tr>
-   <td>Monthly Sales Report
-   </td>
-   <td>Total sales amount and quantity sold per day, grouped by product category, for a selected month and year
-   </td>
-   <td>Henry Agunanne
-   </td>
-  </tr>
-  <tr>
-   <td>Sales per Sales Representative Report
-   </td>
-   <td>Total sales amount per sales rep, grouped by branch, for a selected month
-   </td>
-   <td>Manatad, Francinne
-   </td>
-  </tr>
-  <tr>
-   <td>Product Performance Report
-   </td>
-   <td>Total quantity sold and revenue per product, for a selected quarter, including average price sold
-   </td>
-   <td>Encallado Edlynn Rei
-   </td>
-  </tr>
-  <tr>
-   <td>Revenue per Branch Report
-   </td>
-   <td>Total revenue generated per branch for a selected month and year
-   </td>
-   <td>Manatad Francinne
-   </td>
-  </tr>
-</table>
-
+Thanks to the instructors and academic advisors of the CCINFOM program for guidance and support.
