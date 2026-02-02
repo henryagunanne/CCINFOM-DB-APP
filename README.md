@@ -239,3 +239,10 @@ See the [LICENSE](./LICENSE) file for full details.
 ### ⭐ Acknowledgements
 
 Thanks to the instructors and academic advisors of the CCINFOM program for guidance and support.
+
+---
+
+## 📄 AI Assistance Disclosure
+
+This README file was generated with the assistance of ChatGPT and was reviewed, edited, and verified by the project authors.  
+All source code, system design, and implementation were fully developed by the authors. 
