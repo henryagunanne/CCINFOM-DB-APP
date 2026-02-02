@@ -90,7 +90,9 @@ These reports support business insights and informed decision making.
 
 - Java JDK (version 8 or above)
 - MySQL Server
-- IDE (optional): Eclipse, IntelliJ IDEA, or NetBeans
+- Terminal / Command Prompt
+- Git
+- IDE (optional): VSCode, Eclipse or IntelliJ IDEA
 
 ### Installation Steps
 
@@ -98,10 +100,120 @@ These reports support business insights and informed decision making.
    ```bash
    git clone https://github.com/henryagunanne/CCINFOM-DB-APP.git
    ```
-   
-Import or run the SQL schema in your MySQL environment.
-Configure database credentials in the application as needed.
-Build and run the Java application via your IDE or scripts.
+2. Navigate to the project directory
+   ```bash
+   cd CCINFOM-DB-APP
+   ```
+3. Set up the database
+   - Open your MySQL client (MySQL Workbench, CLI, etc.)
+   - Import or execute the provided SQL schema files
+   - Ensure the database is running
+   - Update database credentials in the source code if required
+
+
+### 📁 Project Structure Reference
+
+```text
+CCINFOM-DB-APP/
+├── lib/
+│   └── mysql-connector-j-9.3.0.jar
+├── src/
+│   ├── Driver.java
+│   └── other source files
+├── run.sh
+├── run.bat
+└── README.md
+```
+
+---
+
+## ▶️ Running the Application (With External Libraries)
+
+This application requires the **MySQL Connector/J** library, which is included in the `lib/` folder.  
+You may run the system using either the provided scripts or by compiling and executing the program manually.
+
+
+### Option 1: Run Using the Provided Scripts (Recommended)
+
+For convenience, platform-specific run scripts are included.
+
+#### macOS / Linux
+```bash
+./run.sh
+```
+
+### Windows
+```bat
+run.bat
+```
+
+
+💡 Ensure the script has execution permission on macOS/Linux:
+```bash
+chmod +x run.sh
+```
+or 
+```
+chmod 744 run.sh
+```
+
+---
+### Option 2: Compile and Run Manually
+
+Use this option if you prefer full control over the build process or are running in a restricted environment.
+Make sure you are in the source directory where Driver.java and the other .java files are located.
+
+### macOS / Linux
+Compile:
+```bash
+javac -cp "../lib/mysql-connector-j-9.3.0.jar:." *.java
+```
+or 
+```bash
+javac -cp ".:/absolute/path/to/CCINFOM-DB-APP/lib/mysql-connector-j-9.3.0.jar:." Driver.java
+```
+
+Run:
+```bash
+java -cp "lib/mysql-connector-j-9.3.0.jar:src" Driver
+```
+or 
+```bash
+java -cp ".:/absolute/path/to/CCINFOM-DB-APP/libs/*" Driver
+```
+
+### Windows
+Compile:
+```bat
+javac -cp "..\lib\mysql-connector-j-9.3.0.jar;." *.java
+```
+or
+```bat
+java -cp ".;C:\absolute\path\to\CCINFOM-DB-APP\lib/mysql-connector-j-9.3.0.jar:." Driver.java
+```
+
+Run:
+```bat
+java -cp "lib\mysql-connector-j-9.3.0.jar;src" Driver
+```
+or 
+```bat
+java -cp ".;C:\absolute\path\to\CCINFOM-DB-APP\libs\*" Driver
+```
+
+### 🔧 Example (macOS)
+```bash
+javac -cp ".:/Users/yourname/Projects/CCINFOM-DB-APP/libs/*" Driver.java \
+&& java -cp ".:/Users/yourname/Projects/CCINFOM-DB-APP/libs/*" Driver
+```
+
+### ⚠️ Notes
+- The mysql-connector-j-9.3.0.jar file must remain inside the lib/ folder
+- Classpath separators differ by OS:
+    - `:` for macOS/Linux
+    - `;` for Windows
+- Ensure MySQL Server is running before launching the application
+- Driver is the main entry point of the program
 
 --- 
 
